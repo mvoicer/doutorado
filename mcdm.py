@@ -41,4 +41,5 @@ class Mcdm:
         # Determine the ranking
         outranking_flows['Rank'] = outranking_flows['Leav_Enter'].rank(ascending=False).astype(int)
 
+        # Return the pairwise comparison matrix and the ranking as a list
         return pc_matrix, outranking_flows['Rank'].to_list()
