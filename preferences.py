@@ -3,12 +3,17 @@ import pandas as pd
 
 
 # Define Saaty's 1-9 Scale for AHP Preference
-def matrix_intervalos(A):
-    max_A = np.max(A, axis=0)
-    min_A = np.min(A, axis=0)
+def matrix_intervalos(df):
+    # max and min per column
+    max_A = np.max(df, axis=0)
+    min_A = np.min(df, axis=0)
+    # Cria um df vazio com 10 linhas (num valores escala Saaty) e 3 (n_obj) cols.
     I = np.zeros(shape=(10, len(max_A)))
+    # Itera no indice do df (i) e cria intervalos igualmente espaçados entre o
+    # minimo e máximo de cada objetivo.
     for i, (menor, maior) in enumerate(zip(min_A, max_A)):
         intervalos = np.linspace(menor, maior, 10)
+        # Coloca os valores na coluna correspondente ao objetivo
         I[:, i] = intervalos.ravel()
     return I
 
@@ -39,7 +44,7 @@ def preferencia(df_dif, interval):
 
     for x in it:
         for j, _ in enumerate(interval):
-            if j == len(interval):
+            if j == len(interval)-1:
                 df_pref[it.multi_index] = 9 if x > 0 else 1.0 / 9.0
                 # df_pref[it.multi_index] = 1.0 / 9.0 if x > 0 else 9
                 break
