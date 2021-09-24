@@ -10,7 +10,7 @@ from ahp import ahp
 from data_preparation import create_subsample
 from fine_tunning import fine_tunning
 from data_preparation import merge_matrices
-from similarity import Similarity
+from correlation import *
 from consts import *
 from distance import Distance
 from metrics import mse, rmse, r2, mape, accuracy
@@ -25,8 +25,8 @@ df_obj = df_obj.iloc[0:105, :].round(5)
 npop, nvar = df_var.shape
 nobj = df_obj.shape[1]
 
-# Calculate the similarities
-df_dist = Distance(df_obj).rec_euclidean()
+# Calculate the distance among solutions
+df_dist = Distance(df_obj).euclidean()
 
 # Generate the preferences
 df_obj = df_obj.to_numpy()
@@ -72,7 +72,7 @@ for _ in range(n_executions):
             y_test = df_N_Q.iloc[:, -nobj:]  # real targets
 
             # Load trained model
-            with open("tuned_model_random.pkl", "rb") as fp:
+            with open("models/tuned_model_random.pkl", "rb") as fp:
                 tuned_model = pickle.load(fp)
 
             # # Fine tunning and save best model
@@ -105,7 +105,7 @@ for _ in range(n_executions):
             rank_predicted = ahp(df_merged).index
 
             # Computing tau similarity
-            results[r]['tau'].append(Similarity(rank_aleatory, rank_predicted).norm_kendall())
+            results[r]['tau'].append(norm_kendall(rank_aleatory, rank_predicted))
 
             # Plot pareto front and recommendations
             df_obj = pd.DataFrame(df_obj)
