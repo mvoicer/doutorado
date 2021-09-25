@@ -24,6 +24,13 @@ class Mcdm:
                 pc_matrix.iloc[aux][:] = ndm.iloc[r, :] - ndm.iloc[s, :]
                 aux += 1
 
+        # Reshape the PC matrix
+        pc_matrix_shaped = pd.DataFrame()
+        for i in range(pc_matrix.shape[1]):
+            sol = pd.DataFrame(np.hstack(np.split(pc_matrix.loc[:, i], nrow)).reshape(nrow, nrow)).T
+            pc_matrix_shaped = pd.concat([pc_matrix_shaped, sol], axis=1)
+
+
         # Calculate the preference function
         pref_func_matrix = pc_matrix.copy()
         pref_func_matrix[pref_func_matrix < 0] = 0
@@ -42,4 +49,4 @@ class Mcdm:
         outranking_flows['Rank'] = outranking_flows['Leav_Enter'].rank(ascending=False).astype(int)
 
         # Return the pairwise comparison matrix and the ranking as a list
-        return pc_matrix, outranking_flows['Rank'].to_list()
+        return pc_matrix_shaped, outranking_flows['Rank'].to_list()
