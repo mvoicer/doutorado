@@ -1,5 +1,10 @@
 import pandas as pd
 import numpy as np
+import random
+
+
+def randomize(vector):
+    return random.shuffle(vector)
 
 
 def create_subsample(df_var, df_pref, nobj, index):
