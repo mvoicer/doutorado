@@ -1,10 +1,5 @@
 import pandas as pd
 import numpy as np
-import random
-
-
-def randomize(vector):
-    return random.shuffle(vector)
 
 
 def create_subsample(df_var, df_pref, nobj, index):
@@ -29,22 +24,32 @@ def create_subsample(df_var, df_pref, nobj, index):
     return sub_df
 
 
-def merge_matrices(idx_N_Q, preference_matrix, ml_predicted, nobj, npop):
+def merge_matrices(idx_N_Q, preference_matrix, ml_predicted):
     """
     Replace the predicted values in the preference matrix to calculate
     if the rankings (predicted vs preference) are equal or not.
     :param idx_N_Q: N-Q index
     :param preference_matrix: preference matrix
     :param ml_predicted: ranking obtained with the ML method
-    :param nobj: number of objectives
-    :param npop: number of solutions
-    :return: dataframe merged with the real values and the values predicted
+    :return: dataframe merged with the real values and the predicted values
     """
     df_merged = preference_matrix.copy()
-    for col in range(nobj):
-        row = 0
-    for s1 in idx_N_Q:
-        for s2 in idx_N_Q:
-            df_merged.iloc[s1, s2 + npop * col] = ml_predicted.loc[row, col]
-            row += 1
-    return df_merged
+    nobj = ml_predicted.shape[1]
+
+    # Gera todas as combinações do N-Q
+    comb_idx = []
+    for i in idx_N_Q:
+        for k in idx_N_Q:
+            comb_idx.append(tuple([i, k]))
+
+    results = pd.DataFrame()
+    x = 0
+    for _ in range(0, df_merged.shape[1], df_merged.shape[0]):
+        m = df_merged.iloc[:, nobj:nobj+df_merged.shape[0]].to_numpy()
+
+        for i, idx in enumerate(comb_idx):
+            m[idx] = ml_predicted.values[i, x]
+        x += 1
+        m = pd.DataFrame(m)
+        results = pd.concat([results, m], ignore_index=False, axis=1)
+    return results
