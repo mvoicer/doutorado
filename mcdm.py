@@ -3,16 +3,22 @@ import pandas as pd
 import numpy as np
 
 
-class Mcdm:
-    def __init__(self, df, weights, cb):
+class Gera_Pc_Mcdm:
+    def __init__(self, df, weights=None, cb=None):
         self.df = df
-        self.weights = weights
-        self.cb = cb
+        if weights is None:
+            self.weights = [1 / df.shape[1]] * df.shape[1]
+        else:
+            self.weights = weights
+        if cb is None:
+            self.cb = ['cost'] * df.shape[1]
+        else:
+            self.cb = cb
 
-    def promethee_ii(self):
-        nrow = self.df.shape[0]
-        ncol = self.df.shape[1]
+    def promethee_ii_pc(self):
+        # Followed steps of Prof. Manoj Mathew on https://www.youtube.com/watch?v=xe2XgGrI0Sg
 
+        nrow, ncol = self.df.shape
         # Normalization
         ndm = Normalization(self.df, self.cb, self.weights).normalization_zero_one()
 
@@ -30,23 +36,76 @@ class Mcdm:
             sol = pd.DataFrame(np.hstack(np.split(pc_matrix.loc[:, i], nrow)).reshape(nrow, nrow)).T
             pc_matrix_shaped = pd.concat([pc_matrix_shaped, sol], axis=1)
 
+        return pc_matrix_shaped
 
+    def ahp_pc(self):
+        # Calculate the AHP based on the values of each alternative/objective
+        min_col = self.df.min(axis=0).to_list()
+        max_col = self.df.max(axis=0).to_list()
+        nrow, ncol = self.df.shape
+
+        pc_matrix = pd.DataFrame()
+
+        for col in range(ncol):
+            # Calculate intervals equally divided into 1-9
+            intervals = np.linspace(0, max_col[col] - min_col[col], num=9)
+
+            # Calculate the difference among all solutions
+            m1 = np.tile(self.df.iloc[:, col], (nrow, 1))
+            m2 = np.tile(self.df.iloc[:, col].to_numpy().reshape(-1, 1), (1, nrow))
+            df_dif = pd.DataFrame(m2 - m1)
+
+            # Replace the diff values by the Saaty's scale values
+            for i in range(nrow):
+                for j in range(nrow):
+                    if i == j:
+                        df_dif.iloc[i, j] = 1
+                    elif df_dif.iloc[i, j] < 0:
+                        continue
+                    else:
+                        for idx, valor in enumerate(intervals):
+                            if df_dif.iloc[i, j] <= valor:
+                                df_dif.iloc[j, i] = idx + 1
+                                df_dif.iloc[i, j] = 1/(idx + 1)
+                                break
+
+            # If cost criteria: inverse of the assigned number
+            if self.cb[col] == 'cost':
+                df_dif = 1 / df_dif
+            else:
+                pass
+
+            # Concat the pairwise matrices
+            pc_matrix = pd.concat([pc_matrix, df_dif], axis=1)
+
+        return pc_matrix
+
+
+class Mcdm_ranking:
+    def __init__(self, pc_matrix):
+        self.pc_matrix = pc_matrix
+
+    def promethee_ii_ranking(self, weights):
+        nrow, ncol = self.pc_matrix.shape
         # Calculate the preference function
-        pref_func_matrix = pc_matrix.copy()
-        pref_func_matrix[pref_func_matrix < 0] = 0
+        self.pc_matrix[self.pc_matrix <= 0] = 0
 
         # Calculate the aggregated preference function
-        agg_pref_func_matrix = (pref_func_matrix * self.weights).apply(sum, axis=1)
-        agg_pref_func_matrix = pd.DataFrame(agg_pref_func_matrix.values.reshape(nrow, nrow))
+        _agg_pref_func_matrix = self.pc_matrix.dot(weights)
+        agg_pref_func_matrix = pd.DataFrame(_agg_pref_func_matrix.values.reshape(nrow, nrow))
 
         # Determine the leaving and entering outranking flows
         outranking_flows = pd.DataFrame(np.zeros((nrow, 2)), columns=['Leaving', 'Entering'])
         outranking_flows['Leaving'] = agg_pref_func_matrix.apply(sum, axis=1) / (ncol - 1)
-        outranking_flows['Entering'] = agg_pref_func_matrix.apply(sum, axis=0) / (ncol - 1)
+        outranking_flows['Entering'] = agg_pref_func_matrix.apply(sum, axis=0) / (nrow - 1)
         outranking_flows['Leav_Enter'] = outranking_flows['Leaving'] - outranking_flows['Entering']
 
         # Determine the ranking
-        outranking_flows['Rank'] = outranking_flows['Leav_Enter'].rank(ascending=False).astype(int)
+        ranking = outranking_flows['Leav_Enter'].sort_values(ascending=False).index.to_list()
 
-        # Return the pairwise comparison matrix and the ranking as a list
-        return pc_matrix_shaped, outranking_flows['Rank'].to_list()
+        return ranking
+
+    def ahp_ranking(self):
+        ranking = ((self.pc_matrix / self.pc_matrix.apply('sum', axis=0)).apply('sum', axis=1)).sort_values(
+            ascending=False).index.to_list()
+        return ranking
