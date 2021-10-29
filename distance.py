@@ -23,7 +23,7 @@ class Distance:
     def cosine(self):
         """
         Compute the cosine similarity
-        :return: cosine similarity
+        :return: cosine similarity in [-1 1] interval.
         """
         df_aux = pd.DataFrame(np.zeros((self.df.shape[0], self.df.shape[0])))
         for r in range(self.df.shape[0]):
