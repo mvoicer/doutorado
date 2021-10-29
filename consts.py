@@ -1,5 +1,5 @@
 if True:
-    n_executions = 4                # número de vezes que vai rodar o algoritmo para tirar a média
+    n_executions = 3                # número de vezes que vai rodar o algoritmo para tirar a média
     total_samples_per_rec = 51      # total de amostras a serem avaliadas a cada n_rec
     n_rec: int = 5                  # numero de amostras que são apresentadas ao decisor por vez
     CV: int = 5                     # number of cross-validation
@@ -16,7 +16,7 @@ if not True:
     max_sample = 15
 
 results = {'aleatory': {'tau': [],
-                        'cosine': [],
+                        'rho': [],
                         'accuracy': [],
                         'mse': [],
                         'rmse': [],
@@ -24,7 +24,7 @@ results = {'aleatory': {'tau': [],
                         'mape': []
                         },
            'euclidean': {'tau': [],
-                         'cosine': [],
+                         'rho': [],
                          'accuracy': [],
                          'mse': [],
                          'rmse': [],
