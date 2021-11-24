@@ -69,8 +69,8 @@ class Gera_Pc_Mcdm:
                                 df_dif.iloc[i, j] = 1/(idx + 1)
                                 break
 
-            # If cost criteria: inverse of the assigned number
-            if self.cb[col] == 'cost':
+            # If benefit criteria: the higher the value, the better
+            if self.cb[col] == 'benefit':
                 df_dif = 1 / df_dif
             else:
                 pass
