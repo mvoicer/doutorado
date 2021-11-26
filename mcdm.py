@@ -92,15 +92,13 @@ class Mcdm_ranking:
     def __init__(self):
         pass
 
-    def promethee_ii_ranking(self, pc_matrix, weights=None, nobj=None):
+    def promethee_ii_ranking(self, pc_matrix, weights=None, nobj=None, nrow=None):
         if weights is None:
             weights = [1 / nobj] * nobj
         else:
             weights = weights
         # Calculate the preference function
         pc_matrix[pc_matrix <= 0] = 0
-
-        nrow = pc_matrix.shape[0]
 
         # Calculate the aggregated preference function
         _agg_pref_func_matrix = pc_matrix * weights
