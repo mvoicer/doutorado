@@ -36,7 +36,7 @@ class Gera_Pc_Mcdm:
             sol = pd.DataFrame(np.hstack(np.split(pc_matrix.loc[:, i], nrow)).reshape(nrow, nrow)).T
             pc_matrix_shaped = pd.concat([pc_matrix_shaped, sol], axis=1)
 
-        return pc_matrix_shaped
+        return pc_matrix_shaped, pc_matrix
 
     def ahp_pc(self):
         # Calculate the AHP based on the values of each alternative/objective
@@ -45,6 +45,7 @@ class Gera_Pc_Mcdm:
         nrow, ncol = self.df.shape
 
         pc_matrix = pd.DataFrame()
+        eigen = pd.DataFrame()
 
         for col in range(ncol):
             # Calculate intervals equally divided into 1-9
@@ -55,48 +56,60 @@ class Gera_Pc_Mcdm:
             m2 = np.tile(self.df.iloc[:, col].to_numpy().reshape(-1, 1), (1, nrow))
             df_dif = pd.DataFrame(m2 - m1)
 
+            new_df_dif = df_dif.copy()
+
             # Replace the diff values by the Saaty's scale values
             for i in range(nrow):
                 for j in range(nrow):
                     if i == j:
-                        df_dif.iloc[i, j] = 1
+                        new_df_dif.iloc[i, j] = 1
                     elif df_dif.iloc[i, j] < 0:
                         continue
                     else:
                         for idx, valor in enumerate(intervals):
                             if df_dif.iloc[i, j] <= valor:
-                                df_dif.iloc[j, i] = idx + 1
-                                df_dif.iloc[i, j] = 1/(idx + 1)
+                                new_df_dif.iloc[j, i] = idx + 1
+                                new_df_dif.iloc[i, j] = 1 / (idx + 1)
                                 break
 
             # If cost criteria: inverse of the assigned number
             if self.cb[col] == 'cost':
-                df_dif = 1 / df_dif
+                new_df_dif = 1 / new_df_dif
             else:
                 pass
 
             # Concat the pairwise matrices
-            pc_matrix = pd.concat([pc_matrix, df_dif], axis=1)
+            pc_matrix = pd.concat([pc_matrix, new_df_dif], axis=1)
 
-        return pc_matrix
+            # Calculate the priority vector
+            eigen_daqui = (new_df_dif / (new_df_dif.apply('sum', axis=0))).apply('sum', axis=1) / nrow
+            eigen = pd.concat([eigen, eigen_daqui], axis=1)
+
+        return pc_matrix, eigen
 
 
 class Mcdm_ranking:
-    def __init__(self, pc_matrix):
-        self.pc_matrix = pc_matrix
+    def __init__(self):
+        pass
 
-    def promethee_ii_ranking(self, weights):
-        nrow, ncol = self.pc_matrix.shape
+    def promethee_ii_ranking(self, pc_matrix, weights=None, nobj=None):
+        if weights is None:
+            weights = [1 / nobj] * nobj
+        else:
+            weights = weights
         # Calculate the preference function
-        self.pc_matrix[self.pc_matrix <= 0] = 0
+        pc_matrix[pc_matrix <= 0] = 0
+
+        nrow = pc_matrix.shape[0]
 
         # Calculate the aggregated preference function
-        _agg_pref_func_matrix = self.pc_matrix.dot(weights)
+        _agg_pref_func_matrix = pc_matrix * weights
+        _agg_pref_func_matrix = _agg_pref_func_matrix.apply('sum', axis=1)
         agg_pref_func_matrix = pd.DataFrame(_agg_pref_func_matrix.values.reshape(nrow, nrow))
 
         # Determine the leaving and entering outranking flows
         outranking_flows = pd.DataFrame(np.zeros((nrow, 2)), columns=['Leaving', 'Entering'])
-        outranking_flows['Leaving'] = agg_pref_func_matrix.apply(sum, axis=1) / (ncol - 1)
+        outranking_flows['Leaving'] = agg_pref_func_matrix.apply(sum, axis=1) / (nobj - 1)
         outranking_flows['Entering'] = agg_pref_func_matrix.apply(sum, axis=0) / (nrow - 1)
         outranking_flows['Leav_Enter'] = outranking_flows['Leaving'] - outranking_flows['Entering']
 
@@ -105,7 +118,13 @@ class Mcdm_ranking:
 
         return ranking
 
-    def ahp_ranking(self):
-        ranking = ((self.pc_matrix / self.pc_matrix.apply('sum', axis=0)).apply('sum', axis=1)).sort_values(
-            ascending=False).index.to_list()
+    def ahp_ranking(self, priority, weights=None):
+        ncol = priority.shape[1]
+        if weights is None:
+            weights = [1 / ncol] * ncol
+        else:
+            weights = weights
+
+        ranking = (priority * weights).apply('sum', axis=1).sort_values(ascending=True).index.to_list()
+
         return ranking
