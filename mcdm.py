@@ -45,7 +45,6 @@ class Gera_Pc_Mcdm:
         nrow, ncol = self.df.shape
 
         pc_matrix = pd.DataFrame()
-        eigen = pd.DataFrame()
 
         for col in range(ncol):
             # Calculate intervals equally divided into 1-9
@@ -81,12 +80,8 @@ class Gera_Pc_Mcdm:
             # Concat the pairwise matrices
             pc_matrix = pd.concat([pc_matrix, new_df_dif], axis=1)
 
-            # Calculate the priority vector
-            eigen_daqui = (new_df_dif / (new_df_dif.apply('sum', axis=0))).apply('sum', axis=1) / nrow
-            eigen = pd.concat([eigen, eigen_daqui], axis=1)
-
-        return pc_matrix, eigen
-
+        # return pc_matrix
+        return pc_matrix
 
 class Mcdm_ranking:
     def __init__(self):
@@ -116,13 +111,26 @@ class Mcdm_ranking:
 
         return ranking
 
-    def ahp_ranking(self, priority, weights=None):
-        ncol = priority.shape[1]
+    def ahp_ranking(self, pc_matrix, weights=None, nrow=None, nobj=None):
         if weights is None:
-            weights = [1 / ncol] * ncol
+            weights = [1 / nobj] * nobj
         else:
             weights = weights
 
-        ranking = (priority * weights).apply('sum', axis=1).sort_values(ascending=True).index.to_list()
+        # Priority vector
+        eigen = pd.DataFrame()
+
+        temp = nrow
+        # Percorre a matriz de comparacoes pareadas e calcula as prioridades de cada matriz (i.e. da PC de cada objetivo)
+        # e no final (eigen) concatena elas para, entao, multiplicar pelos pesos e calcular o ranking.
+        for i in range(0, pc_matrix.shape[1], nrow):
+            _pc_matrix = pc_matrix.iloc[:, i:temp]
+            temp += nrow
+
+            eigen_daqui = (_pc_matrix / (_pc_matrix.apply('sum', axis=0))).apply('sum', axis=1) / nrow
+            eigen = pd.concat([eigen, eigen_daqui], axis=1)
+
+        # Calculate ranking
+        ranking = (eigen * weights).apply('sum', axis=1).sort_values(ascending=True).index.to_list()
 
         return ranking
