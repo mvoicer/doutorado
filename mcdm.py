@@ -17,8 +17,8 @@ class Gera_Pc_Mcdm:
 
     def promethee_ii_pc(self):
         # Followed steps of Prof. Manoj Mathew on https://www.youtube.com/watch?v=xe2XgGrI0Sg
-
         nrow, ncol = self.df.shape
+
         # Normalization
         ndm = Normalization(self.df, self.cb, self.weights).normalization_zero_one()
 
@@ -30,13 +30,16 @@ class Gera_Pc_Mcdm:
                 pc_matrix.iloc[aux][:] = ndm.iloc[r, :] - ndm.iloc[s, :]
                 aux += 1
 
-        # Reshape the PC matrix
+        # # Reshape the PC matrix to squared matrix
         pc_matrix_shaped = pd.DataFrame()
         for i in range(pc_matrix.shape[1]):
             sol = pd.DataFrame(np.hstack(np.split(pc_matrix.loc[:, i], nrow)).reshape(nrow, nrow)).T
             pc_matrix_shaped = pd.concat([pc_matrix_shaped, sol], axis=1)
 
-        return pc_matrix_shaped, pc_matrix
+        # Calculate the preference function Pj(a,b)
+        pc_matrix_shaped[pc_matrix_shaped <= 0] = 0
+
+        return pc_matrix_shaped
 
     def ahp_pc(self):
         # Calculate the AHP based on the values of each alternative/objective
@@ -92,11 +95,24 @@ class Mcdm_ranking:
             weights = [1 / nobj] * nobj
         else:
             weights = weights
-        # Calculate the preference function
-        pc_matrix[pc_matrix <= 0] = 0
 
-        # Calculate the aggregated preference function
-        _agg_pref_func_matrix = pc_matrix * weights
+        ## Reshape the matrix to multiply the weights: n x n -> n**2 x nobj
+        temp_ = pd.DataFrame()
+        t = nrow
+        for j in range(0, pc_matrix.shape[1], nrow):
+            temp = pd.DataFrame()
+            t += j
+            prov = pc_matrix.iloc[:, j:t]
+
+            for i in range(nrow):
+                temp = pd.concat([temp, prov.iloc[:, i]], axis=0)
+            temp_ = pd.concat([temp_, temp], axis=1)
+            del temp
+
+        ## Apply the multiplication
+        _agg_pref_func_matrix = temp_ * weights
+
+        # Aggregated preference function pi(a,b)
         _agg_pref_func_matrix = _agg_pref_func_matrix.apply('sum', axis=1)
         agg_pref_func_matrix = pd.DataFrame(_agg_pref_func_matrix.values.reshape(nrow, nrow))
 
