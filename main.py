@@ -12,9 +12,13 @@ from consts import *
 from distance import Distance
 from metrics import mse, rmse, r2, mape, accuracy
 from mcdm import Gera_Pc_Mcdm, Mcdm_ranking
+from sklearn.preprocessing import StandardScaler, Normalizer
+np.seterr(divide='ignore', invalid='ignore')    # ignora erros de divisão por 0
+
 
 # NSGAIII_GPD03_M2_DEC.CSV -- 2 objetivos, convexa e multimodal
 # NSGAIII_GPD04_M3_DEC.CSV -- 3 objetivos
+# NSGAIII_GPD04_M2_DEC.CSV -- 2 objetivos, concava
 df_var = pd.read_csv("data/NSGAIII_GPD04_M2_DEC.CSV", header=None)  # decision variables
 df_var = df_var.iloc[0:max_sample, :].round(5)
 df_obj = pd.read_csv('data/NSGAIII_GPD04_M2_OBJ.CSV', header=None)  # values in Pareto front
@@ -23,23 +27,32 @@ df_obj = df_obj.iloc[0:max_sample, :].round(5)
 npop, nvar = df_var.shape
 nobj = df_obj.shape[1]
 
+tipo_recomendacao = 'Euclidean'  # Cosine, Euclidean
+mcdm_pairwise_method = 'AHP'  # AHP, Promethee
+
 # Calculate the distance among solutions
-if not True:
-    df_dist = Distance(df_obj).euclidean()
-    wg = 'euclidean'
-if True:
+if tipo_recomendacao == 'Cosine':
     df_dist = Distance(df_obj).cosine()
-    wg = 'cosine'
+elif tipo_recomendacao == 'Euclidean':
+    df_dist = Distance(df_obj).euclidean()
+else:
+    raise ValueError("Recommendation not implemented")
 
 # Generate the preferences
-if True:
-    pc_matrix = Gera_Pc_Mcdm(df=df_obj, weights=[.5, .5], cb=['cost', 'cost']).ahp_pc()
-if not True:
+if mcdm_pairwise_method == 'AHP':
+    pc_matrix = Gera_Pc_Mcdm(df=df_obj).ahp_pc()
+    rank_mcdm = Mcdm_ranking().ahp_ranking(pc_matrix=pc_matrix, weights=[.5, .5], nrow=npop, nobj=nobj)
+elif mcdm_pairwise_method == 'Promethee':
     pc_matrix = Gera_Pc_Mcdm(df=df_obj, weights=[.5, .5], cb=['cost', 'cost']).promethee_ii_pc()
+    rank_mcdm = Mcdm_ranking().promethee_ii_ranking(pc_matrix=pc_matrix, weights=None, nobj=nobj, nrow=npop)
+else:
+    raise ValueError("MCDM not implemented")
 
-# plt.scatter(df_obj.loc[:, 0], df_obj.loc[:, 1], color='grey', marker='o')  # available
-# plt.scatter(df_obj.loc[rank_mcdm[:10], 0], df_obj.loc[rank_mcdm[:10], 1], color='blue', marker='v')  # primeiro elemento
-# # plt.scatter(df_obj.loc[rank_mcdm[-1:], 0], df_obj.loc[rank_mcdm[-1:], 1], color='red', marker='v')  # ultimo elemento
+# plt.scatter(df_obj.iloc[:, 0], df_obj.iloc[:, 1], color='grey', marker='o')  # available
+# plt.scatter(df_obj.iloc[rank_mcdm[:2], 0], df_obj.iloc[rank_mcdm[:2], 1], color='green', marker='v')  # primeiro elemento
+# plt.scatter(df_obj.iloc[rank_mcdm[-1:], 0], df_obj.iloc[rank_mcdm[-1:], 1], color='black', marker='*')  # ultimo elemento
+# plt.ylim([-0.05, 2.2])
+# plt.xlim([-0.05, 2.2])
 # plt.show()
 
 # Generate the index to be evaluated
@@ -57,10 +70,10 @@ for r in recomm_engines:
         lista_aleatoria = alternatives.copy()
         random.shuffle(lista_aleatoria)
         for aux in range(n_rec, total_samples_per_rec, n_rec):
-            if r == 'aleatory' or (r == 'euclidean' and len(Q) == 0):
+            if (r == 'aleatory') | (r == 'personalized' and len(Q) == 0):
                 Q = lista_aleatoria[0:aux]
                 N_Q = [x for x in alternatives if x not in Q]
-            elif r == 'euclidean':
+            elif r == 'personalized':
                 # calculate most similar
                 most_similar = df_dist[rank_aleatory[0:aux]].sum(axis=1).sort_values(ascending=True)[
                                0:n_rec * 2].index.to_list()
@@ -83,16 +96,20 @@ for r in recomm_engines:
             X_test = df_N_Q.iloc[:, :-nobj]  # to predict
             y_test = df_N_Q.iloc[:, -nobj:]  # real targets
 
+            # if mcdm_pairwise_method == 'Promethee':
+            #     std = Normalizer().fit(X_train)
+            #     X_train = std.transform(X_train)
+            #     X_test = std.transform(X_test)
+
             # Load trained model
             with open("models/tuned_model_random.pkl", "rb") as fp:
                 tuned_model = pickle.load(fp)
 
-            # # Fine tunning and save best model
+            # # # Fine tunning and save best model
             # if len(results[r]['tau']) <= int(total_samples_per_rec / n_rec):
             #     tuned_model = fine_tunning(CV, X_train, y_train)
             #     with open("tuned_model_"+r+".pkl", 'wb') as arq:
             #         pickle.dump(tuned_model, arq)
-            # # Just load saved model
             # else:
             #     with open("tuned_model_"+r+".pkl", "rb") as fp:
             #         tuned_model = pickle.load(fp)
@@ -103,6 +120,8 @@ for r in recomm_engines:
             # Model evaluation
             y_pred = tuned_model.predict(X_test)
             y_pred = pd.DataFrame(y_pred)
+            if mcdm_pairwise_method == 'AHP':
+                y_pred = y_pred.astype(int)
 
             results[r]['accuracy'].append(accuracy(y_pred, y_test))
             results[r]['mse'].append(mse(y_pred, y_test))
@@ -113,8 +132,21 @@ for r in recomm_engines:
             # Merge the predictions of the df train and df test
             df_merged = merge_matrices(N_Q, pc_matrix, y_pred)
 
-            # Employ AHP in the predicted (mixed with preferences) dataset
-            rank_predicted = Mcdm_ranking(df_merged).ahp_ranking()
+            # Employ MCDM method in the predicted (mixed with preferences) dataset
+            if mcdm_pairwise_method == 'AHP':
+                rank_predicted = Mcdm_ranking().ahp_ranking(pc_matrix=df_merged, weights=None, nrow=npop, nobj=nobj)
+            elif mcdm_pairwise_method == 'Promethee':
+                rank_predicted = Mcdm_ranking().promethee_ii_ranking(pc_matrix=df_merged, weights=None, nobj=nobj, nrow=npop)
+            else:
+                raise ValueError("MCDM not implemented")
+
+            plt.scatter(df_obj.iloc[:, 0], df_obj.iloc[:, 1], color='grey', marker='o')  # available
+            plt.scatter(df_obj.iloc[rank_predicted[:aux], 0], df_obj.iloc[rank_predicted[:aux], 1], color='red',
+                        marker='v')  # primeiro elemento
+            plt.scatter(df_obj.iloc[Q[:aux], 0], df_obj.iloc[Q[:aux], 1], color='black', marker='*')  # ultimo elemento
+            plt.ylim([-0.05, 2.2])
+            plt.xlim([-0.05, 2.2])
+            plt.show()
 
             # Computing tau similarity
             results[r]['tau'].append(norm_kendall(rank_aleatory, rank_predicted))
@@ -123,20 +155,20 @@ for r in recomm_engines:
             # Update the ranking
             rank_aleatory = rank_predicted
 
-euc = pd.DataFrame(results['euclidean']['tau'])
-euc['recommendation'] = wg
+
+euc = pd.DataFrame(results['personalized']['tau'])
+euc['Recommendation'] = tipo_recomendacao
 euc['iteracao'] = list(range(0, int(total_samples_per_rec / n_rec))) * n_executions
 
 ale = pd.DataFrame(results['aleatory']['tau'])
-ale['recommendation'] = 'aleatory'
+ale['Recommendation'] = 'Aleatory'
 ale['iteracao'] = list(range(0, int(total_samples_per_rec / n_rec))) * n_executions
 
 data = pd.concat([euc, ale])
 
-sns.boxplot(data=data, hue='recommendation', x='iteracao', y=0)
-plt.xlabel("Iteration")
-plt.ylabel("Similarity")
-plt.ylim(bottom=0, top=1)
+g = sns.boxplot(data=data, hue='Recommendation', x='iteracao', y=0)
+g.set_yscale("log")
+_ = g.set(xlabel="Iteration", ylabel="Similarity")
 plt.axhline(y=.05, ls=':', color='red')
-
+plt.title(mcdm_pairwise_method)
 plt.show()
