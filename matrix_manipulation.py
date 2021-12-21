@@ -16,7 +16,9 @@ def create_subsample(df_var, df_pref, nobj, index):
             # and the preference between the two objectives
             sub_df.loc[cont] = pd.concat([df_var.loc[i], df_var.loc[j], df_pref.loc[i, j]], axis=0, ignore_index=True)
             cont += 1
-    return sub_df
+    X = sub_df.iloc[:, :-nobj]
+    y = sub_df.iloc[:, -nobj:]
+    return X, y
 
 def _create_subsample(df_var, df_pref, nobj, index):
     """
@@ -33,7 +35,9 @@ def _create_subsample(df_var, df_pref, nobj, index):
             else:
                 continue
             cont += 1
-    return sub_df
+    X = sub_df.iloc[:, :-nobj]
+    y = sub_df.iloc[:, -nobj:]
+    return X, y
 
 def merge_matrices(idx_N_Q, preference_matrix, ml_predicted):
     """
