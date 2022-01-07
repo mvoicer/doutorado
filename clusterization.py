@@ -10,10 +10,9 @@ def clusterization(df, type, n_solutions):
         labels = kmeans.labels_
         unique_labels = np.unique(labels)
 
-        rand = randrange(len(unique_labels))
-
         chosen = []
         for unq in unique_labels:
+            rand = randrange(len(np.where(labels == unique_labels[unq])[0]))
             chosen.append(np.where(labels == unique_labels[unq])[0][rand])
         return chosen
     else:
