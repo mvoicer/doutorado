@@ -1,17 +1,20 @@
 import numpy as np
+from random import randrange
 from sklearn.cluster import KMeans
 
 
-def clusterization(df, type, tam):
+def clusterization(df, type, n_solutions):
     if type == 'kmeans':
-        kmeans = KMeans(n_clusters=tam,
+        kmeans = KMeans(n_clusters=n_solutions,
                         init='k-means++').fit(df)
         labels = kmeans.labels_
         unique_labels = np.unique(labels)
 
+        rand = randrange(len(unique_labels))
+
         chosen = []
         for unq in unique_labels:
-            chosen.append(np.where(labels == unique_labels[unq])[0][0])
+            chosen.append(np.where(labels == unique_labels[unq])[0][rand])
         return chosen
     else:
         raise ValueError("Cluster technique not implemented")
