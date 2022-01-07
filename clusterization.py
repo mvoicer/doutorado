@@ -3,9 +3,9 @@ from random import randrange
 from sklearn.cluster import KMeans
 
 
-def clusterization(df, type, n_solutions):
+def clusterization(df, type, tam):
     if type == 'kmeans':
-        kmeans = KMeans(n_clusters=n_solutions,
+        kmeans = KMeans(n_clusters=tam,
                         init='k-means++').fit(df)
         labels = kmeans.labels_
         unique_labels = np.unique(labels)
