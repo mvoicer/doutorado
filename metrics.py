@@ -1,28 +1,24 @@
 import numpy as np
-import pandas as pd
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import mean_squared_error, r2_score, accuracy_score
 
 
-def mean_absolute_percentage_error(y_true, y_pred):
-    y_true, y_pred = np.array(y_true), np.array(y_pred)
-    return np.mean(np.abs((y_true - y_pred) / y_true))
+# https://stackoverflow.com/questions/47648133/mape-calculation-in-python
+def mape(y_pred, y_true):
+    real, y_pred = np.array(y_true), np.array(y_pred)
+    return np.mean(np.abs((real - y_pred) / real))*100
 
+# https://scikit-learn.org/stable/modules/generated/sklearn.metrics.accuracy_score.html
+def accuracy(y_pred, y_true):
+    return accuracy_score(y_true, y_pred)
 
-def accuracy(pred, real):
-    return np.mean(np.mean(1 - abs(pd.DataFrame(pred.values) - pd.DataFrame(real.values) / pd.DataFrame(pred.values))))
+# https://scikit-learn.org/stable/modules/generated/sklearn.metrics.mean_squared_error.html
+def mse(y_pred, y_true):
+    return mean_squared_error(y_true, y_pred, squared=True)
 
+# https://scikit-learn.org/stable/modules/generated/sklearn.metrics.mean_squared_error.html
+def rmse(y_pred, y_true):
+    return mean_squared_error(y_true, y_pred, squared=False)
 
-def mse(pred, real):
-    return mean_squared_error(pd.DataFrame(real.values), pd.DataFrame(pred.values), squared=True)
-
-
-def rmse(pred, real):
-    return mean_squared_error(pd.DataFrame(real.values), pd.DataFrame(pred.values), squared=False)
-
-
-def r2(pred, real):
-    return r2_score(pd.DataFrame(real.values), pd.DataFrame(pred.values))
-
-
-def mape(pred, real):
-    return mean_absolute_percentage_error(pd.DataFrame(real.values), pd.DataFrame(pred.values))
+# https://scikit-learn.org/stable/modules/generated/sklearn.metrics.r2_score.html
+def r2(y_pred, y_true):
+    return r2_score(y_true, y_pred)
