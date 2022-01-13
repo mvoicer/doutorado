@@ -18,7 +18,6 @@ def fine_tunning(CV, X, y, algorithm):
                                                                min_impurity_decrease=0.0,
                                                                min_impurity_split=None,
                                                                init=None,
-                                                               random_state=42,
                                                                max_features=None,
                                                                alpha=0.9,
                                                                verbose=0,
@@ -58,7 +57,6 @@ def fine_tunning(CV, X, y, algorithm):
         model = MultiOutputRegressor(LassoCV(n_jobs=-1,
                                                       cv=CV,
                                                       verbose=True,
-                                                      random_state=42,
                                                       eps=0.00001,
                                                       n_alphas=100,
                                                       max_iter=6000000))
@@ -95,7 +93,6 @@ def fine_tunning(CV, X, y, algorithm):
 
     elif algorithm == 'rf':
         model = MultiOutputRegressor(RandomForestRegressor(max_depth=2,
-                                                           random_state=42,
                                                            n_estimators=1000,
                                                            n_jobs=-1))
         hyperparameters = dict(estimator__n_estimators=[10,50,100, 1000],
