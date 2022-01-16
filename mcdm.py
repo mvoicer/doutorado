@@ -4,23 +4,16 @@ import numpy as np
 
 
 class Gera_Pc_Mcdm:
-    def __init__(self, df, weights=None, cb=None):
+    def __init__(self, df, cb):
         self.df = df
-        if weights is None:
-            self.weights = [1 / df.shape[1]] * df.shape[1]
-        else:
-            self.weights = weights
-        if cb is None:
-            self.cb = ['cost'] * df.shape[1]
-        else:
-            self.cb = cb
+        self.cb = cb
 
     def promethee_ii_pc(self):
         # Followed steps of Prof. Manoj Mathew on https://www.youtube.com/watch?v=xe2XgGrI0Sg
         nrow, ncol = self.df.shape
 
         # Normalization
-        ndm = Normalization(self.df, self.cb, self.weights).normalization_zero_one()
+        ndm = Normalization(self.df, self.cb).normalization_zero_one()
 
         # Pairwise comparisons
         pc_matrix = pd.DataFrame(np.zeros((nrow ** 2, ncol)))
@@ -83,7 +76,7 @@ class Gera_Pc_Mcdm:
             # Concat the pairwise matrices
             pc_matrix = pd.concat([pc_matrix, new_df_dif], axis=1)
 
-        # return pc_matrix
+            # del new_df_dif
         return pc_matrix
 
 class Mcdm_ranking:
@@ -127,7 +120,7 @@ class Mcdm_ranking:
 
         return ranking
 
-    def ahp_ranking(self, pc_matrix, weights=None, nrow=None, nobj=None):
+    def ahp_ranking(self, pc_matrix, weights=None, nobj=None, nrow=None):
         if weights is None:
             weights = [1 / nobj] * nobj
         else:
@@ -143,7 +136,7 @@ class Mcdm_ranking:
             _pc_matrix = pc_matrix.iloc[:, i:temp]
             temp += nrow
 
-            eigen_daqui = (_pc_matrix / (_pc_matrix.apply('sum', axis=0))).apply('sum', axis=1) / nrow
+            eigen_daqui = (_pc_matrix / (_pc_matrix.apply('sum', axis=1))).apply('sum', axis=1) / nrow
             eigen = pd.concat([eigen, eigen_daqui], axis=1)
 
         # Calculate ranking
