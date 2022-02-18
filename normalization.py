@@ -1,3 +1,5 @@
+import pandas as pd
+import numpy as np
 
 
 class Normalization:
@@ -15,7 +17,8 @@ class Normalization:
         self.cb = cb
 
     def normalization_zero_one(self):
-        result = self.matrix.copy()
+        l, c = self.matrix.shape
+        result = pd.DataFrame(np.zeros((l, c)))
         pos = 0
         for col in self.matrix.columns:
             max_value = self.matrix[col].max()
