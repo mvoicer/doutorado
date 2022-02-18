@@ -8,9 +8,11 @@ def make_recommendation(most_similar, Q, tam, qtd_to_add):
         if (len(Q) <= (tam - qtd_to_add)) & (q not in Q):
             Q.append(q)
     # Recommend aleatory solutions
+    randomized = most_similar.copy()
+    random.shuffle(randomized)
     for _ in most_similar:
-        randomized = most_similar.copy()
-        random.shuffle(randomized)
+        # randomized = most_similar.copy()
+        # random.shuffle(randomized)
         for p in randomized:
             if (len(Q) <= tam) & (p not in Q):
                 Q.append(p)
