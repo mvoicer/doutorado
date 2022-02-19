@@ -10,23 +10,21 @@ def make_recommendation(most_similar, Q, tam, qtd_to_add):
     # Recommend aleatory solutions
     randomized = most_similar.copy()
     random.shuffle(randomized)
-    for _ in most_similar:
-        # randomized = most_similar.copy()
-        # random.shuffle(randomized)
-        for p in randomized:
-            if (len(Q) <= tam) & (p not in Q):
-                Q.append(p)
-            else:
-                continue
+
+    for p in randomized:
+        if (len(Q) <= (tam-1)) & (p not in Q):
+            Q.append(p)
+        else:
+            continue
     return Q
 
 
-def initial_recommendation(type, indexes, df_obj, length):
-    if type == 'aleatory':
+def initial_recommendation(type_rec, indexes, df_obj, length):
+    if type_rec == 'aleatory':
         temp = indexes.copy()
         random.shuffle(temp)
         Q = temp[0:length]
-    elif type == 'cluster':
+    elif type_rec == 'cluster':
         Q = clusterization(df=df_obj, type='kmeans', tam=length)
     N_Q = [x for x in indexes if x not in Q]
     return Q, N_Q
