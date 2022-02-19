@@ -2,21 +2,17 @@ import random
 from clusterization import clusterization
 
 
-def make_recommendation(most_similar, Q, tam, qtd_to_add):
+def make_recommendation(most_similar, Q, n_rec, qtd_to_add):
     # Recommend the closest solutions
-    for q in most_similar:
-        if (len(Q) <= (tam - qtd_to_add)) & (q not in Q):
-            Q.append(q)
-    # Recommend aleatory solutions
-    randomized = most_similar.copy()
-    random.shuffle(randomized)
+    q_to_add = []
+    [q_to_add.append(x) for x in most_similar if (len(q_to_add) <= qtd_to_add) & (x not in Q)]
 
-    for p in randomized:
-        if (len(Q) <= (tam-1)) & (p not in Q):
-            Q.append(p)
-        else:
-            continue
-    return Q
+    # Recommend aleatory solutions
+    randomized = list(set(most_similar) - set(Q))
+    random.shuffle(randomized)
+    [q_to_add.append(y) for y in randomized if len(q_to_add) <= (n_rec-1)]
+
+    return q_to_add
 
 
 def initial_recommendation(type_rec, indexes, df_obj, length):
