@@ -12,7 +12,7 @@ def make_recommendation(most_similar, Q, n_rec, qtd_to_add):
     random.shuffle(randomized)
     [q_to_add.append(y) for y in randomized if len(q_to_add) <= (n_rec-1)]
 
-    return q_to_add
+    return q_to_add[:-1]
 
 
 def initial_recommendation(type_rec, indexes, df_obj, length):

@@ -1,10 +1,10 @@
 import pandas as pd
 import numpy as np
 import pickle
+import joblib
 import random
 from tqdm import tqdm
 from matplotlib import pyplot as plt
-from mpl_toolkits import mplot3d  # 3d plots
 import math
 
 from matrix_manipulation import create_subsample, merge_matrices, _create_subsample, _merge_matrices
@@ -15,6 +15,7 @@ from metrics import *
 from pre_processing import load_dataset, initialize_results, generate_preferences, \
     calculate_similarities, calculate_new_ranking
 from recomm_manipulation import initial_recommendation, make_recommendation
+from condorcet import condorcet
 
 np.seterr(divide='ignore', invalid='ignore')  # ignora erros de divisão por 0
 
@@ -24,19 +25,13 @@ def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, percen
                     plot_recommended_solutions):
     # How to save the results
     path_to_save = (mcdm_method + '_' + str(
-        percent_random) + '%_initrandom_sim' + similarity_measure + '_' + ml_method + '_' + date).lower()
+        percent_random) + 'initrandom_sim' + similarity_measure + '_' + ml_method + '_' + date).lower()
 
     # Load variables
     n_executions, total_samples_per_rec, max_sample, CV = load_params()
     df_var, df_obj = load_dataset(df=dataframe, n_samples=max_sample)
-
-    # df_var = pd.DataFrame({'A': [5.1, 3.3, 1.4, 0.6, 0.7, 4.5],
-    #                        'B': [1.0, 0.2, 1.3, 1.5, 0.16,1.5],
-    #                        'C': [2.1, 2.4, 2.5, 3.6, 2.1, 2.4]})
-    # df_obj = pd.DataFrame()
-    # df_obj['Sum'] = df_var.apply('sum', axis=1)
-    # df_obj['Sqrt'] = df_var.apply('sum', axis=1).apply('sqrt')
-
+    # print('')
+    # print(df_var.to_string())
     npop, nvar = df_var.shape
     nobj = df_obj.shape[1]
     results = initialize_results()
@@ -46,7 +41,8 @@ def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, percen
 
     # Generate the preferences
     pc_matrix, rank_mcdm = generate_preferences(mcdm_method, df_obj, weights=weights, cb=cost_benefit)
-
+    # print('')
+    # print(pc_matrix.to_string())
     if plot_pareto_front is True:
         if df_obj.shape[1] == 2:
             plt.scatter(df_obj.iloc[:, 0], df_obj.iloc[:, 1], color='grey', marker='o', label='Available')
@@ -62,69 +58,92 @@ def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, percen
         elif df_obj.shape[1] == 3:
             ax = plt.axes(projection='3d')
             ax.scatter3D(df_obj.iloc[:, 0], df_obj.iloc[:, 1], df_obj.iloc[:, 2],
-                            color='grey', marker='o')
+                         color='grey', marker='o', label='Available')
             ax.scatter3D(df_obj.iloc[rank_mcdm[:n_rec], 0], df_obj.iloc[rank_mcdm[:n_rec], 1],
-                            df_obj.iloc[rank_mcdm[:n_rec], 2], color='green', marker='v')
-            ax.scatter3D(df_obj.iloc[rank_mcdm[-n_rec], 0], df_obj.iloc[rank_mcdm[-n_rec], 1],
-                            df_obj.iloc[rank_mcdm[-n_rec], 2], color='black', marker='*')
-            ax.view_init(60, 35)
+                         df_obj.iloc[rank_mcdm[:n_rec], 2], color='green', marker='v', label='Best ranked')
+            ax.scatter3D(df_obj.iloc[rank_mcdm[-n_rec:], 0], df_obj.iloc[rank_mcdm[-n_rec:], 1],
+                         df_obj.iloc[rank_mcdm[-n_rec:], 2], color='black', marker='*', label='Worst ranked')
+            ax.view_init(30, 30)
             ax.set_xlabel('Obj 1')
             ax.set_ylabel('Obj 2')
             ax.set_zlabel('Obj 3')
+            ax.legend(loc='best')
             ax.set_title('Best MCDM ranked solutions in the PF')
             plt.show()
+        else:
+            # plot in parallel coordinates
+            import plotly.express as px
+
+            fig = px.parallel_coordinates(df_obj,
+                                          dimensions=df_obj.columns,
+                                          labels={k: v for k, v in
+                                                  enumerate(['Obj ' + str(i) for i in df_obj.columns])})
+
+            fig.show()
 
     # Initialize an arbitrary ranking to check convergence
     indexes = list(df_var.index)
     rank_aleatory = indexes.copy()
     random.shuffle(rank_aleatory)
 
-    for exc in tqdm(range(n_executions)):
+    for exc in (range(n_executions)):
         print("\nExecution: ", exc)
         print("*" * 100)
         # Recommended solutions
         Q = []
-        tam = n_rec
         for aux in range(n_rec, total_samples_per_rec, n_rec):
             # 1st iteration?
             if len(Q) == 0:
-                Q, N_Q = initial_recommendation(type=initial_recomm, indexes=indexes, df_obj=df_obj, length=tam)
+                Q, N_Q = initial_recommendation(type_rec=initial_recomm, indexes=indexes, df_obj=df_obj, length=n_rec)
+                # Train and test set
+                X_train, y_train = _create_subsample(df_var=df_var, df_pref=pc_matrix, nobj=nobj, index=Q)
+                X_test, y_test = _create_subsample(df_var=df_var, df_pref=pc_matrix, nobj=nobj, index=N_Q)
             else:
                 # Calculate the distances/similarities among the solutions
                 # most_similar = df_dist[rank_aleatory[0:tam]].sum(axis=1).sort_values(ascending=True).index.to_list()
                 most_similar = df_dist.iloc[rank_aleatory[0]].sort_values(ascending=True).index.to_list()
-
                 # Qtd random solutions to be added per iteration
                 qtd_to_add = math.floor(n_rec * percent_random)
                 # Generate the list of recommendations
-                Q = make_recommendation(most_similar, Q, tam, qtd_to_add)
+                entrance = make_recommendation(most_similar, Q, n_rec, qtd_to_add)
+
+                # Get the preferences for the new alternatives (entrance) and
+                # for the last one in Q (for the condorcet/regularization) and
+                # merge to the train and test set
+                X_train_, y_train_ = _create_subsample(df_var=df_var, df_pref=pc_matrix, nobj=nobj,  index=entrance+Q)
+
+                # Condorcet
+                # Check the preferences between the last solution in Q and the others in entrance
+                # and infer new possible preferences to increase the number of samples in the training
+                # Ex: if Ai > Aj = 9 and Aj > An = 2, then Ai (will possible be) > An = 7.
+                X_train_cond, y_train_cond = condorcet(Q, entrance, pc_matrix, df_var, nobj)
+
+                X_train = pd.concat([X_train_, X_train_cond, X_train], axis=0, ignore_index=True)
+                y_train = pd.concat([y_train_, y_train_cond, y_train], axis=0, ignore_index=True)
+
+                # Update Q
+                Q = Q + entrance
 
                 # Generate the remaining ones
                 N_Q = [x for x in indexes if x not in Q]
-
-            # Train and test set
-            X_train, y_train = _create_subsample(df_var=df_var, df_pref=pc_matrix, nobj=nobj, index=Q)
-            X_test, y_test = _create_subsample(df_var=df_var, df_pref=pc_matrix, nobj=nobj, index=N_Q)
+                X_test, y_test = _create_subsample(df_var=df_var, df_pref=pc_matrix, nobj=nobj, index=N_Q)
 
             # Fine tunning in the 1st execution and save the best model
             if exc == 0:
                 # check if there are some trained model. if yes, read it.
                 if len(results['tau']) <= int(total_samples_per_rec / n_rec):
                     try:
-                        with open("tunned_models/" + path_to_save + ".pkl", "rb") as fp:
-                            tuned_model = pickle.load(fp)
+                        tuned_model = joblib.load("tunned_models/" + path_to_save + ".gz")
                     except:
                         pass
                 else:
                     pass
                 # train and tunning a model
                 tuned_model = fine_tunning(CV, X_train, y_train, algorithm=ml_method)
-                with open("tunned_models/" + path_to_save + '.pkl', 'wb') as arq:
-                    pickle.dump(tuned_model, arq)
+                joblib.dump(tuned_model, "tunned_models/" + path_to_save + '.gz')
             else:
                 # if 2nd interation on, just read the best model from the execution 0
-                with open("tunned_models/" + path_to_save + '.pkl', "rb") as fp:
-                    tuned_model = pickle.load(fp)
+                tuned_model = joblib.load("tunned_models/" + path_to_save + '.gz')
 
             # Model evaluation
             y_pred = tuned_model.predict(X_test)
@@ -166,11 +185,8 @@ def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, percen
 
             # Update the ranking
             rank_aleatory = rank_predicted
-            tam += n_rec
 
     # Save results
-    filename = open('results/' + path_to_save + '.pkl', 'wb')
-    pickle.dump(results, filename)
-    filename.close()
+    joblib.dump(results, 'results/' + path_to_save + '.gz')
 
     return results
