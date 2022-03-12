@@ -17,16 +17,14 @@ class Normalization:
         self.cb = cb
 
     def normalization_zero_one(self):
-        l, c = self.matrix.shape
-        result = pd.DataFrame(np.zeros((l, c)))
-        pos = 0
-        for col in self.matrix.columns:
-            max_value = self.matrix[col].max()
-            min_value = self.matrix[col].min()
-            dif_max_min = self.matrix[col].max() - self.matrix[col].min()
-            if self.cb[pos] == 'benefit':
-                result[col] = (self.matrix[col] - min_value) / dif_max_min
+        df = self.matrix.to_numpy()
+        dff = np.zeros(self.matrix.shape)
+        for i in range(len(self.cb)):
+            X = df[:, i]
+            if self.cb[i] == 'cost':
+                # lower is better
+                dff[:, i] = (X.max() - X) / (X.max() - X.min())
             else:
-                result[col] = (max_value - self.matrix[col]) / dif_max_min
-            pos += 1
-        return result.round(4)
+                # greater is better
+                dff[:, i] = (X - X.min()) / (X.max() - X.min())
+        return pd.DataFrame(dff).round(4)
