@@ -70,9 +70,14 @@ def merge_matrices(idx_N_Q, preference_matrix, ml_predicted):
     return results
 
 def _merge_matrices(idx_N_Q, preference_matrix, ml_predicted):
+    """
+    Replace the values predicted by the ML in the preference matrix to measure the errors - i.e., if the ML is
+    predicting well.
+    """
     df_merged = preference_matrix.copy()
     nobj = ml_predicted.shape[1]
 
+    # Generate the combinations with the N_Q indexes
     comb_idx = []
     for i in idx_N_Q:
         for k in idx_N_Q:
@@ -81,6 +86,7 @@ def _merge_matrices(idx_N_Q, preference_matrix, ml_predicted):
             else:
                 continue
 
+    # In each N_Q combination index, insert the ML predicted value.
     results = pd.DataFrame()
     x = 0
     for _ in range(0, df_merged.shape[1], df_merged.shape[0]):
