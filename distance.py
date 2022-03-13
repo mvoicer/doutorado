@@ -17,7 +17,10 @@ class Distance:
         df_aux = pd.DataFrame(np.zeros((self.df.shape[0], self.df.shape[0])))
         for r in range(self.df.shape[0]):
             for c in range(self.df.shape[0]):
-                df_aux.loc[r, c] = distance.euclidean(self.df.iloc[r], self.df.iloc[c])
+                if r != c:
+                    df_aux.loc[r, c] = distance.euclidean(self.df.iloc[r], self.df.iloc[c])
+                else:
+                    df_aux.loc[r, c] = 0
         return df_aux
 
     def cosine(self):
@@ -28,7 +31,10 @@ class Distance:
         df_aux = pd.DataFrame(np.zeros((self.df.shape[0], self.df.shape[0])))
         for r in range(self.df.shape[0]):
             for c in range(self.df.shape[0]):
-                df_aux.loc[r, c] = 1 - distance.cosine(self.df.iloc[r], self.df.iloc[c])
+                if r != c:
+                    df_aux.loc[r, c] = 1 - distance.cosine(self.df.iloc[r], self.df.iloc[c])
+                else:
+                    df_aux.loc[r, c] = 0
         return df_aux
 
 
