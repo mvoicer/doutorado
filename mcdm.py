@@ -29,8 +29,8 @@ class Gera_Pc_Mcdm:
             sol = pd.DataFrame(np.hstack(np.split(pc_matrix.loc[:, i], nrow)).reshape(nrow, nrow)).T
             pc_matrix_shaped = pd.concat([pc_matrix_shaped, sol], axis=1)
 
-        # Calculate the preference function Pj(a,b)
-        pc_matrix_shaped[pc_matrix_shaped <= 0] = 0
+        # # Calculate the preference function Pj(a,b)
+        # pc_matrix_shaped[pc_matrix_shaped <= 0] = 0
 
         return pc_matrix_shaped
 
@@ -89,6 +89,9 @@ class Mcdm_ranking:
         else:
             weights = weights
 
+        # Calculate the preference function Pj(a,b)
+        pc_matrix[pc_matrix <= 0] = 0
+
         ## Reshape the matrix to multiply the weights: n x n -> n**2 x nobj
         temp_ = pd.DataFrame()
         t = nrow
@@ -121,25 +124,38 @@ class Mcdm_ranking:
         return ranking
 
     def ahp_ranking(self, pc_matrix, weights=None, nobj=None, nrow=None):
-        if weights is None:
-            weights = [1 / nobj] * nobj
-        else:
-            weights = weights
-
-        # Priority vector
         eigen = pd.DataFrame()
-
         temp = nrow
         # Percorre a matriz de comparacoes pareadas e calcula as prioridades de cada matriz (i.e. da PC de cada objetivo)
         # e no final (eigen) concatena elas para, entao, multiplicar pelos pesos e calcular o ranking.
+        # Ver: https://ricardo-vargas.com/pt/articles/analytic-hierarchy-process/
+        # Ver: https://edisciplinas.usp.br/mod/resource/view.php?id=2822802
         for i in range(0, pc_matrix.shape[1], nrow):
             _pc_matrix = pc_matrix.iloc[:, i:temp]
             temp += nrow
 
-            eigen_daqui = (_pc_matrix / (_pc_matrix.apply('sum', axis=1))).apply('sum', axis=1) / nrow
-            eigen = pd.concat([eigen, eigen_daqui], axis=1)
+            # normalized matrix and Eigen vector
+            _pc_matrix = _pc_matrix / _pc_matrix.sum()
+
+            # weights vector (w_ij)
+            # Normalize the values of the matrix by dividing each element by the sum of the column to which it belongs.
+            # The "relative priority" (RP) column in the following table shows the average of each criterion.
+            relative_priority = _pc_matrix.sum(axis=1) / nrow
+
+            # to find relative weight of each row by dividing the sum of the values of each row of n.
+            consistency_vector = _pc_matrix.sum(axis=1) / relative_priority
+
+            # lambda_max is equal to the sum of the elements of the column vector AW.
+            # highest eigenvalue lambda_max of the parity matrix is obtained by means of the arithmetic
+            # mean of the elements of the consistency vector.
+            lambda_max = np.sum(consistency_vector) / nrow
+
+            # consistency index (CI) - calculado via slide da USP
+            ci_i = (lambda_max - nrow) / (nrow - 1)
+
+            # Concatena vetor de prioridades
+            eigen = pd.concat([eigen, relative_priority], axis=1, ignore_index=True)
 
         # Calculate ranking
-        ranking = (eigen * weights).apply('sum', axis=1).sort_values(ascending=True).index.to_list()
-
+        ranking = (eigen * relative_priority).apply('sum', axis=1).sort_values(ascending=True).index.to_list()
         return ranking
