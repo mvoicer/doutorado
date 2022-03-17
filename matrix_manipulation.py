@@ -59,8 +59,8 @@ def merge_matrices(idx_N_Q, preference_matrix, ml_predicted):
 
     results = pd.DataFrame()
     x = 0
-    for _ in range(0, df_merged.shape[1], df_merged.shape[0]):
-        m = df_merged.iloc[:, nobj:nobj+df_merged.shape[0]].to_numpy()
+    for k in range(0, df_merged.shape[1], df_merged.shape[0]):
+        m = df_merged.iloc[:, k:k+df_merged.shape[0]].to_numpy()
 
         for i, idx in enumerate(comb_idx):
             m[idx] = ml_predicted.values[i, x]
@@ -75,7 +75,6 @@ def _merge_matrices(idx_N_Q, preference_matrix, ml_predicted):
     predicting well.
     """
     df_merged = preference_matrix.copy()
-    nobj = ml_predicted.shape[1]
 
     # Generate the combinations with the N_Q indexes
     comb_idx = []
@@ -83,14 +82,12 @@ def _merge_matrices(idx_N_Q, preference_matrix, ml_predicted):
         for k in idx_N_Q:
             if i != k:
                 comb_idx.append(tuple([i, k]))
-            else:
-                continue
 
     # In each N_Q combination index, insert the ML predicted value.
     results = pd.DataFrame()
     x = 0
-    for _ in range(0, df_merged.shape[1], df_merged.shape[0]):
-        m = df_merged.iloc[:, nobj:nobj+df_merged.shape[0]].to_numpy()
+    for y in range(0, df_merged.shape[1], df_merged.shape[0]):
+        m = df_merged.iloc[:, y:y+df_merged.shape[0]].to_numpy()
 
         for i, idx in enumerate(comb_idx):
             m[idx] = ml_predicted.values[i, x]
