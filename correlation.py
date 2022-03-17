@@ -126,27 +126,17 @@ def kendall_scipy(m, n):
     return tau
 
 
-def norm_kendall(m, n):
+def norm_kendall(r1, r2):
     """
-    Compute the Kendall tau distance.
+    Compute the normalized Kendall tau distance.
     """
-    _n = len(m)
-    assert len(n) == _n, "Both lists have to be of equal length"
-    i, j = np.meshgrid(np.arange(_n), np.arange(_n))
-    a = np.argsort(m)
-    b = np.argsort(n)
-    ndisordered = np.logical_or(np.logical_and(a[i] < a[j], b[i] > b[j]),
-                                np.logical_and(a[i] > a[j], b[i] < b[j])).sum()
-    return (ndisordered / (_n * (_n - 1))).round(4)
-
-#         n = len(self.rank1)
-#         assert len(self.rank2) == n, "Both lists have to be of equal length"
-#         i, j = np.meshgrid(np.arange(n), np.arange(n))
-#         a = np.argsort(self.rank1)
-#         b = np.argsort(self.rank2)
-#         ndisordered = np.logical_or(np.logical_and(a[i] < a[j], b[i] > b[j]),
-#                                     np.logical_and(a[i] > a[j], b[i] < b[j])).sum()
-#         return (ndisordered / (n * (n - 1))).round(4)
+    n = len(r1)
+    assert len(r2) == n, "Both lists have to be of equal length"
+    i, j = np.meshgrid(np.arange(n), np.arange(n))
+    a = np.argsort(r1)
+    b = np.argsort(r2)
+    ndisordered = np.logical_or(np.logical_and(a[i] < a[j], b[i] > b[j]), np.logical_and(a[i] > a[j], b[i] < b[j])).sum()
+    return (ndisordered / (n * (n - 1))).round(4)
 
 
 def pearson_rho(m, n):
