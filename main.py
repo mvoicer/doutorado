@@ -13,6 +13,6 @@ results = run_recommender(dataframe='NSGAIII_GPD04_M3',
                           initial_recomm='cluster',                     # aleatory, cluster
                           similarity_measure='Euclidean',               # Cosine, Euclidean
                           ml_method='rf',                               #'gbr', 'lasso', 'elasticnet', 'rf', 'ridge'
-                          date='opa1',
+                          date='opa11',
                           plot_pareto_front=False,
                           plot_recommended_solutions=False)
