@@ -95,10 +95,10 @@ def fine_tunning(CV, X, y, algorithm):
         model = MultiOutputRegressor(RandomForestRegressor(max_depth=2,
                                                            n_estimators=1000,
                                                            n_jobs=-1))
-        hyperparameters = dict(estimator__n_estimators=[10,50,100, 1000],
+        hyperparameters = dict(estimator__n_estimators=[10, 50, 100, 1000],
                                estimator__max_features=["auto", "log2", "sqrt"],
                                estimator__bootstrap=[True, False],
-                               estimator__max_depth=[5, 10, 15, 20, 40, 80, 90, 100, 110],
+                               estimator__max_depth=[5, 15, 20, 30, 80],
                                estimator__min_samples_leaf=[3, 4, 5],
                                estimator__min_samples_split=[2, 4, 8, 10, 12, 20],
                                estimator__warm_start=[True, False])
