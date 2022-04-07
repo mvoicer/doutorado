@@ -29,11 +29,11 @@ def fine_tunning(CV, X, y, algorithm):
                                                                ccp_alpha=0.0))
         hyperparameters = dict(estimator__learning_rate=[0.05],
                                estimator__loss=['ls'],
-                               estimator__n_estimators=[500, 1000],
+                               estimator__n_estimators=[50, 500, 1000, 2000],
                                estimator__criterion=['friedman_mse'],
                                estimator__min_samples_split=[7, 10],
                                estimator__max_depth=[15, 30],
-                               estimator__min_samples_leaf=[1, 2],
+                               estimator__min_samples_leaf=[1, 2, 5, 10],
                                estimator__min_impurity_decrease=[0],
                                estimator__max_leaf_nodes=[5, 30])
         randomized_search = RandomizedSearchCV(model,
