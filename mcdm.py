@@ -156,6 +156,11 @@ class Mcdm_ranking:
             # Concatena vetor de prioridades
             eigen = pd.concat([eigen, relative_priority], axis=1, ignore_index=True)
 
+        if weights is None:
+            weights = relative_priority
+        else:
+            weights = weights
+
         # Calculate ranking
-        ranking = (eigen * relative_priority).apply('sum', axis=1).sort_values(ascending=True).index.to_list()
+        ranking = (eigen * weights).apply('sum', axis=1).sort_values(ascending=True).index.to_list()
         return ranking
