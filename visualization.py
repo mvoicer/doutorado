@@ -50,7 +50,9 @@ class Visualization:
     def plot_recommended_solutions(df_obj, recommended, ranking, n_rec):
         plt.scatter(df_obj.iloc[:, 0], df_obj.iloc[:, 1], color='grey', marker='o', facecolors='none', label='Available')
         plt.scatter(df_obj.iloc[recommended[-n_rec:], 0], df_obj.iloc[recommended[-n_rec:], 1], color='black', marker='o', label='Recommended')
-        plt.scatter(df_obj.iloc[ranking[0], 0], df_obj.iloc[ranking[0], 1], color='red', marker='o', label='Best predicted')
+        plt.scatter(df_obj.iloc[ranking[:n_rec], 0], df_obj.iloc[ranking[:n_rec], 1], color='red', marker='o', label='Best predicted')
+        plt.scatter(df_obj.iloc[rank_mcdm[:n_rec], 0], df_obj.iloc[rank_mcdm[:n_rec], 1], color='red', marker='o',
+                    label='Best predicted')
         plt.ylim(ymin=0)
         plt.xlim(xmin=0)
         plt.title('Recommended solutions')
@@ -64,10 +66,12 @@ class Visualization:
         if df_obj.shape[1] == 2:
             plt.scatter(df_obj.iloc[:, 0], df_obj.iloc[:, 1], color='grey', facecolors='none', marker='o',
                         label='Available')
-            plt.scatter(df_obj.iloc[rank_mcdm[:n_rec], 0], df_obj.iloc[rank_mcdm[:n_rec], 1],
+            plt.scatter(df_obj.iloc[rank_mcdm[:n_rec], 0],
+                        df_obj.iloc[rank_mcdm[:n_rec], 1],
                         color='red', marker='o', label='Best mcdm ranked')
-            plt.scatter(df_obj.iloc[rank_mcdm[-n_rec:], 0], df_obj.iloc[rank_mcdm[-n_rec:], 1],
-                        color='black', marker='o', label='Worst mcdm ranked')
+            # plt.scatter(df_obj.iloc[rank_mcdm[-n_rec:], 0],
+            #             df_obj.iloc[rank_mcdm[-n_rec:], 1],
+            #             color='black', marker='o', label='Worst mcdm ranked')
             plt.ylim(ymin=0)
             plt.xlim(xmin=0)
             plt.legend(loc='best')
@@ -98,4 +102,3 @@ class Visualization:
                                                   enumerate(['Obj ' + str(i) for i in df_obj.columns])})
 
             fig.show()
-
