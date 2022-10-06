@@ -3,10 +3,9 @@ from random import randrange
 from sklearn.cluster import KMeans
 
 
-def clusterization(df, type, tam):
-    if type == 'kmeans':
-        kmeans = KMeans(n_clusters=tam,
-                        init='k-means++').fit(df)
+def clusterization(df, cluster_technique, tam):
+    if cluster_technique == 'kmeans':
+        kmeans = KMeans(n_clusters=tam, init='k-means++').fit(df)
         labels = kmeans.labels_
         unique_labels = np.unique(labels)
 
@@ -16,4 +15,4 @@ def clusterization(df, type, tam):
             chosen.append(np.where(labels == unique_labels[unq])[0][rand])
         return chosen
     else:
-        raise ValueError("Cluster technique not implemented")
+        raise ValueError("Cluster technique {} not implemented".format(cluster_technique))
