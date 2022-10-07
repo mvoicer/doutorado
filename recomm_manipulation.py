@@ -22,6 +22,6 @@ def initial_recommendation(type_rec, indexes, df_obj, length):
         random.shuffle(temp)
         Q = temp[0:length]
     elif type_rec == 'cluster':
-        Q = clusterization(df=df_obj, type='kmeans', tam=length)
+        Q = clusterization(df=df_obj, cluster_technique='kmeans', tam=length)
     N_Q = [x for x in indexes if x not in Q]
     return Q, N_Q

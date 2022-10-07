@@ -13,14 +13,14 @@ def load_dataset(df, n_samples):
 
 
 # Calculate similarities among the solutions
-def calculate_similarities(df_obj, approach):
+def calculate_similarities(df_obj, simm_approach):
     # Calculate the distance among solutions
-    if approach == 'Cosine':
+    if simm_approach == 'Cosine':
         df_dist = Distance(df_obj).cosine()
-    elif approach == 'Euclidean':
+    elif simm_approach == 'Euclidean':
         df_dist = Distance(df_obj).euclidean()
     else:
-        raise ValueError('Recommendation {} not implemented'.format(approach))
+        raise ValueError('Recommendation {} not implemented'.format(simm_approach))
     return df_dist
 
 # Initialize a dict for the results
