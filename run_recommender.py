@@ -22,8 +22,12 @@ def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, percen
                     initial_recomm, similarity_measure, ml_method, date, plot_pareto_front,
                     plot_recommended_solutions):
     # How to save the results -- define name
-    path_to_save = (mcdm_method + '_' + str(
-        percent_random) + 'initrandom_sim' + similarity_measure + '_' + ml_method + '_' + date).lower()
+    path_to_save = (date + '__' +
+                    mcdm_method +
+                    '__theta_' + str(percent_random) +
+                    '__init_' + initial_recomm +
+                    '__sim_' + similarity_measure +
+                    '__ml_' + ml_method).lower()
 
     # Load variables
     n_executions, total_samples_per_rec, max_sample, CV = load_params()

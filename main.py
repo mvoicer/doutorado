@@ -10,9 +10,9 @@ results = run_recommender(dataframe='NSGAIII_GPD04_M3',
                           weights=None,
                           cost_benefit=None,
                           percent_random=0.5,                           # {0-1}% float. Aleatory solutions to be recomm
-                          initial_recomm='cluster',                     # aleatory, cluster
-                          similarity_measure='Euclidean',               # Cosine, Euclidean
-                          ml_method='rf',                               #'gbr', 'lasso', 'elasticnet', 'rf', 'ridge'
-                          date='opa11',
+                          initial_recomm='cluster',                     # rand, cluster
+                          similarity_measure='Euclidean',               # cos, euc
+                          ml_method='rf',                               #'gbr', 'lasso', 'elast', 'rf', 'ridge'
+                          date='10102022',
                           plot_pareto_front=False,
                           plot_recommended_solutions=False)
