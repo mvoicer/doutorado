@@ -17,7 +17,11 @@ def make_recommendation(most_similar, Q, n_rec, qtd_aleatory_to_add):
 
 
 def initial_recommendation(type_rec, indexes, df_obj, length):
-    if type_rec == 'aleatory':
+    """
+    rand: aleatory recommendations
+    cluster: use kmeans technique and select 1 solution per cluster
+    """
+    if type_rec == 'rand':
         temp = indexes.copy()
         random.shuffle(temp)
         Q = temp[0:length]
