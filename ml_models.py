@@ -81,7 +81,7 @@ def fine_tunning(CV, X, y, algorithm):
         tuned_model = hyperparameters_tuning.best_estimator_
         return tuned_model
 
-    elif algorithm == 'elasticnet':
+    elif algorithm == 'elast':
         model = linear_model.MultiTaskElasticNet(alpha=.9,
                                                  max_iter=6000000,
                                                  tol=.00001,
