@@ -12,12 +12,21 @@ def load_dataset(df, n_samples):
     return df_var, df_obj
 
 
-# Calculate similarities among the solutions
 def calculate_similarities(df_obj, simm_approach):
-    # Calculate the distance among solutions
-    if simm_approach == 'Cosine':
+    """
+    Summary:
+    Calculate the distance based on the 'simm_approach' among solutions
+    Parameters:
+        df_obj: dataframe with the values in objective space
+        simm_approach:
+            cos: cosine measure
+            euc: euclidean distance
+    Returns:
+        df with the distances
+    """
+    if simm_approach == 'cos':
         df_dist = Distance(df_obj).cosine()
-    elif simm_approach == 'Euclidean':
+    elif simm_approach == 'euc':
         df_dist = Distance(df_obj).euclidean()
     else:
         raise ValueError('Recommendation {} not implemented'.format(simm_approach))
