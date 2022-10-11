@@ -9,31 +9,25 @@ class Visualization:
     @staticmethod
     def scatter_predicted(n_obj, y_test, y_pred):
         for j in range(n_obj):
-            # plt.figure(figsize=(10, 10))
             plt.scatter(x=y_test.iloc[:, j], y=y_pred.iloc[:, j], c='crimson')
-
             p1 = max(max(y_pred.iloc[:, j]), max(y_test.iloc[:, j]))
             p2 = min(min(y_pred.iloc[:, j]), min(y_test.iloc[:, j]))
             plt.plot([p1, p2], [p1, p2], 'b-')
-            plt.xlabel('True Values', fontsize=15)
-            plt.ylabel('Predictions', fontsize=15)
-            plt.yscale('log')
-            plt.xscale('log')
-            # plt.ylim([-9, 9])
-            # plt.xlim([-9, 9])
-            plt.title('Real vs Predict values')
+            plt.xlabel('True Values', fontsize=12)
+            plt.ylabel('Predictions', fontsize=12)
+            plt.ylim([-10, 10])
+            plt.xlim([-10, 10])
+            plt.title('Real vs Predict')
             plt.axis('equal')
         plt.show()
 
     @staticmethod
     def hist_residuals(n_obj, y_test, y_pred):
         for j in range(n_obj):
-            # plt.figure(figsize=(10, 10))
-            sns.distplot(y_test.iloc[:, j] - y_pred.iloc[:, j], bins=50)
-            plt.yscale('log')
-            plt.xscale('log')
-            plt.xlabel('Real - Predicted values', fontsize=15)
-            plt.ylabel('Standardized residuals', fontsize=15)
+            sns.displot(y_test.iloc[:, j] - y_pred.iloc[:, j], bins=50)
+            plt.xlabel('Real - Predicted', fontsize=12)
+            plt.ylabel('Standardized residuals', fontsize=12)
+            plt.xlim([-15, 15])
             plt.title('Residuals')
         plt.show()
 
@@ -47,12 +41,11 @@ class Visualization:
         plt.show()
 
     @staticmethod
-    def plot_recommended_solutions(df_obj, recommended, ranking, n_rec):
-        plt.scatter(df_obj.iloc[:, 0], df_obj.iloc[:, 1], color='grey', marker='o', facecolors='none', label='Available')
+    def plot_recommended_solutions(df_obj, recommended, ranking, rank_mcdm, n_rec):
+        plt.scatter(df_obj.iloc[:, 0], df_obj.iloc[:, 1], color='grey', marker='o', facecolors='none')
         plt.scatter(df_obj.iloc[recommended[-n_rec:], 0], df_obj.iloc[recommended[-n_rec:], 1], color='black', marker='o', label='Recommended')
         plt.scatter(df_obj.iloc[ranking[:n_rec], 0], df_obj.iloc[ranking[:n_rec], 1], color='red', marker='o', label='Best predicted')
-        plt.scatter(df_obj.iloc[rank_mcdm[:n_rec], 0], df_obj.iloc[rank_mcdm[:n_rec], 1], color='red', marker='o',
-                    label='Best predicted')
+        plt.scatter(df_obj.iloc[rank_mcdm[:n_rec], 0], df_obj.iloc[rank_mcdm[:n_rec], 1], color='red', marker='o', label='Best MCDM')
         plt.ylim(ymin=0)
         plt.xlim(xmin=0)
         plt.title('Recommended solutions')
@@ -64,7 +57,11 @@ class Visualization:
     @staticmethod
     def plot_pareto_front(df_obj, rank_mcdm, n_rec):
         if df_obj.shape[1] == 2:
-            plt.scatter(df_obj.iloc[:, 0], df_obj.iloc[:, 1], color='grey', facecolors='none', marker='o',
+            plt.scatter(df_obj.iloc[:, 0],
+                        df_obj.iloc[:, 1],
+                        color='grey',
+                        facecolors='none',
+                        marker='o',
                         label='Available')
             plt.scatter(df_obj.iloc[rank_mcdm[:n_rec], 0],
                         df_obj.iloc[rank_mcdm[:n_rec], 1],
