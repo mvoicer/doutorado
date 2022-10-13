@@ -3,12 +3,14 @@ import numpy as np
 import joblib
 import random
 import math
+import time
 
 from matrix_manipulation import create_subsample, merge_matrices
 from ml_models import fine_tunning
 from correlation import norm_kendall, spearman_rho
 from params import *
 from metrics import *
+from matplotlib import pyplot as plt
 from pre_processing import load_dataset, initialize_results, generate_preferences, \
     calculate_similarities, calculate_new_ranking
 from recomm_manipulation import initial_recommendation, make_recommendation
@@ -60,13 +62,8 @@ def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, percen
         temp_error = 1
         accepted_error = 0.05
         for aux in range(n_rec, total_samples_per_rec, n_rec):
-            # 1st iteration?
-            if len(Q) == 0:
-                Q, N_Q = initial_recommendation(type_rec=initial_recomm, indexes=indexes, df_obj=df_obj, length=n_rec)
-                # Train and test set
-                X_train, y_train = create_subsample(df_var=df_var, df_pref=pc_matrix, nobj=nobj, index=Q, all_comb=False)
-                X_test, y_test = create_subsample(df_var=df_var, df_pref=pc_matrix, nobj=nobj, index=N_Q, all_comb=False)
-            else:
+            # 2nd iteration on
+            if len(Q) != 0:
                 # Calculate the distances/similarities among the solutions
                 most_similar = df_dist.iloc[rank_aleatory[0]].sort_values(ascending=True).index.to_list()
 
@@ -126,7 +123,18 @@ def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, percen
             temp_error = norm_kendall(rank_aleatory, rank_predicted)
             results['tau'].append(temp_error)
             results['rho'].append(spearman_rho(rank_aleatory, rank_predicted))
-            results['mcdm'].append(norm_kendall(rank_aleatory, rank_mcdm))
+            results['mcdm'].append(norm_kendall(rank_mcdm, rank_predicted))
+            print('Tau com ranking mcdm: \n', norm_kendall(rank_mcdm, rank_predicted))
+            print("Time to calculate metrics: %s seconds" % (time.time() - start_metrics))
+
+            df_obj = pd.DataFrame(df_obj)
+            plt.scatter(df_obj.loc[:, 0], df_obj.loc[:, 1], color='grey')  # available
+            plt.scatter(df_obj.loc[rank_predicted[0:aux], 0], df_obj.loc[rank_predicted[0:aux], 1],
+                        color='red', marker='o')  # top ranked
+            plt.scatter(df_obj.loc[rank_mcdm[0:aux], 0], df_obj.loc[rank_mcdm[0:aux], 1],
+                        color='black', marker='+', s=100)  # ahp
+            plt.legend(["Available", "Best predicted", 'Best ahp'])
+            plt.show()
 
             # Update the ranking
             rank_aleatory = rank_predicted
