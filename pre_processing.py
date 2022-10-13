@@ -15,14 +15,14 @@ def load_dataset(df, n_samples):
 def calculate_similarities(df_obj, simm_approach):
     """
     Summary:
-    Calculate the distance based on the 'simm_approach' among solutions
+        Calculate the distance based on the 'simm_approach' among solutions
     Parameters:
         df_obj: dataframe with the values in objective space
         simm_approach:
             cos: cosine measure
             euc: euclidean distance
     Returns:
-        df with the distances
+        dataframe with the distances
     """
     if simm_approach == 'cos':
         df_dist = Distance(df_obj).cosine()
