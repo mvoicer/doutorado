@@ -52,19 +52,11 @@ def generate_preferences(mcdm_method, df_obj, weights, cb):
         cb = cb
 
     if mcdm_method == 'AHP':
-        pc_matrix = Gera_Pc_Mcdm(df=df_obj,
-                                 cb=cb).ahp_pc()
-        rank_mcdm = Mcdm_ranking().ahp_ranking(pc_matrix=pc_matrix,
-                                               weights=weights,
-                                               nrow=npop,
-                                               nobj=nobj)
+        pc_matrix = Gera_Pc_Mcdm(df=df_obj, cb=cb).ahp_pc()
+        rank_mcdm = Mcdm_ranking().ahp_ranking(pc_matrix=pc_matrix, weights=weights, nrow=npop, nobj=nobj)
     elif mcdm_method == 'Promethee':
-        pc_matrix = Gera_Pc_Mcdm(df=df_obj,
-                                 cb=cb).promethee_ii_pc()
-        rank_mcdm = Mcdm_ranking().promethee_ii_ranking(pc_matrix=pc_matrix,
-                                                        weights=weights,
-                                                        nobj=nobj,
-                                                        nrow=npop)
+        pc_matrix = Gera_Pc_Mcdm(df=df_obj, cb=cb).promethee_ii_pc()
+        rank_mcdm = Mcdm_ranking().promethee_ii_ranking(pc_matrix=pc_matrix, weights=weights, nobj=nobj, nrow=npop)
     else:
         raise ValueError('Multicriteria method: {} not implemented'.format(mcdm_method))
     return pc_matrix, rank_mcdm
@@ -72,15 +64,9 @@ def generate_preferences(mcdm_method, df_obj, weights, cb):
 
 def calculate_new_ranking(mcdm_method, df_merged, weights, npop, nobj):
     if mcdm_method == 'AHP':
-        rank_predicted = Mcdm_ranking().ahp_ranking(pc_matrix=df_merged,
-                                                    weights=weights,
-                                                    nrow=npop,
-                                                    nobj=nobj)
+        rank_predicted = Mcdm_ranking().ahp_ranking(pc_matrix=df_merged, weights=weights, nrow=npop, nobj=nobj)
     elif mcdm_method == 'Promethee':
-        rank_predicted = Mcdm_ranking().promethee_ii_ranking(pc_matrix=df_merged,
-                                                             weights=weights,
-                                                             nobj=nobj,
-                                                             nrow=npop)
+        rank_predicted = Mcdm_ranking().promethee_ii_ranking(pc_matrix=df_merged, weights=weights, nobj=nobj, nrow=npop)
     else:
         raise ValueError('Multicriteria method: {} not implemented'.format(mcdm_method))
     return rank_predicted
