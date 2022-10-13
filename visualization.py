@@ -24,7 +24,7 @@ class Visualization:
     @staticmethod
     def hist_residuals(n_obj, y_test, y_pred):
         for j in range(n_obj):
-            sns.displot(y_test.iloc[:, j] - y_pred.iloc[:, j], bins=50)
+            sns.displot(y_test.iloc[:, j] - y_pred.iloc[:, j], kde=True)
             plt.xlabel('Real - Predicted', fontsize=12)
             plt.ylabel('Standardized residuals', fontsize=12)
             plt.xlim([-15, 15])
