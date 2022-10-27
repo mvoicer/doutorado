@@ -62,7 +62,7 @@ def generate_preferences(mcdm_method, df_obj, weights, cb):
     return pc_matrix, rank_mcdm
 
 
-def calculate_new_ranking(mcdm_method, df_merged, weights, npop, nobj):
+def calculate_mcdm_ranking(mcdm_method, df_merged, weights, npop, nobj):
     if mcdm_method == 'AHP':
         rank_predicted = Mcdm_ranking().ahp_ranking(pc_matrix=df_merged, weights=weights, nrow=npop, nobj=nobj)
     elif mcdm_method == 'Promethee':

@@ -12,7 +12,7 @@ from params import *
 from metrics import *
 from matplotlib import pyplot as plt
 from pre_processing import load_dataset, initialize_results, generate_preferences, \
-    calculate_similarities, calculate_new_ranking
+    calculate_similarities, calculate_mcdm_ranking
 from recomm_manipulation import initial_recommendation, make_recommendation
 from condorcet import condorcet
 from visualization import Visualization
@@ -113,11 +113,14 @@ def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, percen
             results['r2'].append(r2(y_pred=y_pred, y_true=y_test))
             results['mape'].append(mape(y_pred=y_pred, y_true=y_test))
 
-            # Merge the predictions of the df train and df test
+            # Merge the predictions of train and test sets
             df_merged = merge_matrices(N_Q, pc_matrix, y_pred)
 
             # Calculate the predicted ranking
-            rank_predicted = calculate_new_ranking(mcdm_method, df_merged, weights=weights, npop=npop, nobj=nobj)
+            rank_predicted = calculate_mcdm_ranking(mcdm_method, df_merged, weights=weights, npop=npop, nobj=nobj)
+            print('rank_predicted: \n', rank_predicted)
+            print('rank_mcdm: \n', rank_mcdm)
+            print('rank_aleatorio \n', rank_aleatory)
 
             # Computing tau similarity
             temp_error = norm_kendall(rank_aleatory, rank_predicted)
