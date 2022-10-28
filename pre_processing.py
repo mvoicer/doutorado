@@ -29,7 +29,7 @@ def calculate_similarities(df_obj, simm_approach):
     elif simm_approach == 'euc':
         df_dist = Distance(df_obj).euclidean()
     else:
-        raise ValueError('Recommendation {} not implemented'.format(simm_approach))
+        raise ValueError('Distance indicated is not implemented')
     return df_dist
 
 # Initialize a dict for the results
