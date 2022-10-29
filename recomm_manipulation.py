@@ -20,9 +20,9 @@ def make_recommendation(most_similar, Q, n_rec, qtd_aleatory_to_add):
     # Recommend aleatory solutions
     recomm_aleatory = list(set(most_similar) - set(Q))
     random.shuffle(recomm_aleatory)
-    [new_recommendation.append(y) for y in recomm_aleatory if len(new_recommendation) <= (n_rec-1)]
+    [new_recommendation.append(y) for y in recomm_aleatory if len(new_recommendation) <= (n_rec - 1)]
 
-    return new_recommendation[:-1]
+    return new_recommendation
 
 
 def initial_recommendation(type_rec, indexes, df_obj, length):
@@ -38,6 +38,7 @@ def initial_recommendation(type_rec, indexes, df_obj, length):
         length:     n_rec- number of solutions to be recommended per iteration
         n_rec:                  number of solutions to be recommended per iteration
     """
+    global Q
     if type_rec == 'rand':
         temp = indexes.copy()
         random.shuffle(temp)
