@@ -34,7 +34,6 @@ def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, percen
     # Load variables
     n_executions, total_samples_per_rec, max_sample, CV = load_params()
     df_var, df_obj = load_dataset(df=dataframe, n_samples=max_sample)
-
     npop, nvar = df_var.shape
     nobj = df_obj.shape[1]
     results = initialize_results()
@@ -54,95 +53,121 @@ def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, percen
     rank_aleatory = indexes.copy()
     random.shuffle(rank_aleatory)
 
+    # Initialize number of queries
+    number_queries = 0
+    accepted_error = 0.05
+
     for exc in (range(n_executions)):
+        print("*" * 100)
         print("\nExecution: ", exc)
         print("*" * 100)
         # Recommended solutions
         Q = []
         temp_error = 1
-        accepted_error = 0.05
+        iteracao = 0
+        start_time = time.time()
         for aux in range(n_rec, total_samples_per_rec, n_rec):
+            iteracao += 1
+            print("*" * 50)
+            print("Iteracao: ", iteracao)
+            print("*" * 15)
+
             # 2nd iteration on
             if len(Q) != 0:
                 # Calculate the distances/similarities among the solutions
-                most_similar = df_dist.iloc[rank_aleatory[0]].sort_values(ascending=True).index.to_list()
-
+                most_similar = df_dist.iloc[rank_predicted[0]].sort_values(ascending=True).index.to_list()
+                print("Most similar: ", most_similar)
                 # Generate the list of recommendations
                 entrance = make_recommendation(most_similar, Q, n_rec, math.floor(n_rec * percent_random))
 
-                # Get the preferences for the new alternatives (entrance) and
-                # for the last one in Q (for the condorcet/regularization) and
-                # merge to the train and test set
-                X_train_, y_train_ = create_subsample(df_var=df_var, df_pref=pc_matrix, nobj=nobj, index=entrance + Q, all_comb=False)
-                X_train_cond, y_train_cond = condorcet(Q, entrance, pc_matrix, df_var, nobj)
-                X_train = pd.concat([X_train_, X_train_cond, X_train], axis=0, ignore_index=True)
-                y_train = pd.concat([y_train_, y_train_cond, y_train], axis=0, ignore_index=True)
+                # Get the preferences for the new alternatives (entrance) and for the last one in Q
+                # (for the condorcet/regularization) and merge to the train and test set
+                X_train_, y_train_ = create_subsample(df_var=df_var, df_pref=pc_matrix, nobj=nobj, index=entrance + Q)
+                # X_train_cond, y_train_cond = condorcet(Q, entrance, pc_matrix, df_var, nobj)
+                # X_train = pd.concat([X_train_, X_train_cond, X_train], axis=0, ignore_index=True)
+                # y_train = pd.concat([y_train_, y_train_cond, y_train], axis=0, ignore_index=True)
+                X_train = pd.concat([X_train_, X_train], axis=0, ignore_index=True)
+                y_train = pd.concat([y_train_, y_train], axis=0, ignore_index=True)
 
                 # Update list of recommendations
                 Q = Q + entrance
 
                 # Generate the remaining ones
                 N_Q = [x for x in indexes if x not in Q]
-                X_test, y_test = create_subsample(df_var=df_var, df_pref=pc_matrix, nobj=nobj, index=N_Q, all_comb=False)
+                X_test, y_test = create_subsample(df_var=df_var, df_pref=pc_matrix, nobj=nobj, index=N_Q)
+
+            # 1st iteration
+            else:
+                Q, N_Q = initial_recommendation(type_rec=initial_recomm, indexes=indexes, df_obj=df_obj, length=n_rec)
+                # Train and test set
+                X_train, y_train = create_subsample(df_var=df_var, df_pref=pc_matrix, nobj=nobj, index=Q)
+                X_test, y_test = create_subsample(df_var=df_var, df_pref=pc_matrix, nobj=nobj, index=N_Q)
 
             if plot_recommended_solutions is True:
-                Visualization.plot_recommended_solutions(df_obj, Q, rank_aleatory, n_rec)
+                Visualization.plot_recommended_solutions(df_obj, Q, rank_aleatory, rank_mcdm, n_rec)
 
-            # Fine tunning in the 1st execution, otherwise load the model saved
+            # Fine tunning
             if temp_error > accepted_error:
+                start_fine_tunning = time.time()
                 tuned_model = fine_tunning(CV, X_train, y_train, algorithm=ml_method)
+                print("Time to fine_tunning: %s seconds" % (time.time() - start_fine_tunning))
+
+                start_fit_model = time.time()
                 tuned_model.fit(X_train, y_train)
-                joblib.dump(tuned_model, "tunned_models/" + path_to_save + '.gz')
+                print("Time to fit model: %s seconds" % (time.time() - start_fit_model))
+
+                joblib.dump(tuned_model, "experiments/varia_nrec/tunned_models/" + path_to_save + '.gz')
             else:
-                tuned_model = joblib.load("tunned_models/" + path_to_save + ".gz")
+                tuned_model = joblib.load("experiments/varia_nrec/tunned_models/" + path_to_save + ".gz")
 
             # Model evaluation
             y_pred = tuned_model.predict(X_test)
             y_pred = pd.DataFrame(y_pred)
-            if mcdm_method == 'AHP':
-                # Regularization 1: replace by 9 if the predicted value is greater than 9 (Saaty's scale max value)
-                y_pred[y_pred > 9] = 9
-                y_pred[y_pred < .1] = .1
+
+            # Regularization 1: replace by 9 if the predicted value is greater than 9 (Saaty's scale max value)
+            y_pred[y_pred > 9] = 9
+            y_pred[y_pred < -9] = -9
 
             # Visualization.scatter_predicted(nobj, y_test, y_pred)
-            # Visualization.hist_residuals(n obj, y_test, y_pred)
+            Visualization.hist_residuals(nobj, y_test, y_pred)
 
             # Calculate metrics
             results['mse'].append(mse(y_pred=y_pred, y_true=y_test))
             results['rmse'].append(rmse(y_pred=y_pred, y_true=y_test))
             results['r2'].append(r2(y_pred=y_pred, y_true=y_test))
             results['mape'].append(mape(y_pred=y_pred, y_true=y_test))
+            print("MSE: {}, RMSE: {}, R2: {}, MAPE: {}".format(mse(y_pred=y_pred, y_true=y_test),
+                                                               rmse(y_pred=y_pred, y_true=y_test),
+                                                               r2(y_pred=y_pred, y_true=y_test),
+                                                               mape(y_pred=y_pred, y_true=y_test)))
 
             # Merge the predictions of train and test sets
             df_merged = merge_matrices(N_Q, pc_matrix, y_pred)
 
             # Calculate the predicted ranking
-            rank_predicted = calculate_mcdm_ranking(mcdm_method, df_merged, weights=weights, npop=npop, nobj=nobj)
-            print('rank_predicted: \n', rank_predicted)
-            print('rank_mcdm: \n', rank_mcdm)
-            print('rank_aleatorio \n', rank_aleatory)
+            rank_predicted = calculate_mcdm_ranking(mcdm_method, df_merged, weights=weights, npop=npop, nobj=nobj,
+                                                    cb=cost_benefit)
+            print('Rank predicted: \n', rank_predicted)
+            print('Rank mcdm: \n', rank_mcdm)
+            print('Rank Aleatorio \n', rank_aleatory)
 
-            # Computing tau similarity
+            # Computing tau between solutions
             temp_error = norm_kendall(rank_aleatory, rank_predicted)
             results['tau'].append(temp_error)
             results['rho'].append(spearman_rho(rank_aleatory, rank_predicted))
             results['mcdm'].append(norm_kendall(rank_mcdm, rank_predicted))
-            print('Tau com ranking mcdm: \n', norm_kendall(rank_mcdm, rank_predicted))
-            print("Time to calculate metrics: %s seconds" % (time.time() - start_metrics))
+            print("Tau com ranking mcdm: {}, ranking aleatório: {}".format(norm_kendall(rank_mcdm, rank_predicted),
+                                                                           temp_error))
 
-            df_obj = pd.DataFrame(df_obj)
-            plt.scatter(df_obj.loc[:, 0], df_obj.loc[:, 1], color='grey')  # available
-            plt.scatter(df_obj.loc[rank_predicted[0:aux], 0], df_obj.loc[rank_predicted[0:aux], 1],
-                        color='red', marker='o')  # top ranked
-            plt.scatter(df_obj.loc[rank_mcdm[0:aux], 0], df_obj.loc[rank_mcdm[0:aux], 1],
-                        color='black', marker='+', s=100)  # ahp
-            plt.legend(["Available", "Best predicted", 'Best ahp'])
-            plt.show()
+            # Calculate number of queries
+            number_queries += (n_rec * (n_rec - 1) / 2) * nobj
+            print('Number of queries: ', number_queries)
 
             # Update the ranking
             rank_aleatory = rank_predicted
+        print("Time to run: %s seconds ---" % (time.time() - start_time))
 
     # Save results
-    joblib.dump(results, 'results/' + path_to_save + '.gz')
+    joblib.dump(results, 'experiments/varia_nrec/results/' + path_to_save + '.gz')
 
     return results

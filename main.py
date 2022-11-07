@@ -11,7 +11,7 @@ results = run_recommender(dataframe='NSGAIII_GPD04_M3',
                           cost_benefit=None,
                           percent_random=0.5,                           # {0-1}% float. Aleatory solutions to be recomm
                           initial_recomm='cluster',                     # rand, cluster
-                          similarity_measure='Euclidean',               # cos, euc
+                          similarity_measure='euc',                     # cos, euc
                           ml_method='rf',                               #'gbr', 'lasso', 'elast', 'rf', 'ridge'
                           date='10102022',
                           plot_pareto_front=False,

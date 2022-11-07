@@ -6,7 +6,7 @@ from sklearn import linear_model
 
 def fine_tunning(CV, X, y, algorithm):
     if algorithm == 'gbr':
-        model = MultiOutputRegressor(GradientBoostingRegressor(loss='ls',
+        model = MultiOutputRegressor(GradientBoostingRegressor(loss='squared_error',
                                                                learning_rate=0.001,
                                                                n_estimators=500,
                                                                subsample=1.0,
@@ -27,7 +27,7 @@ def fine_tunning(CV, X, y, algorithm):
                                                                tol=0.0001,
                                                                ccp_alpha=0.0))
         hyperparameters = dict(estimator__learning_rate=[0.05],
-                               estimator__loss=['ls'],
+                               estimator__loss=['squared_error'],
                                estimator__n_estimators=[50, 500, 1000],
                                estimator__criterion=['friedman_mse'],
                                estimator__min_samples_split=[7, 10],
