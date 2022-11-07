@@ -30,7 +30,7 @@ class Distance:
         for r in range(self.df.shape[0]):
             for c in range(self.df.shape[0]):
                 # Subtract 1 (see link above) to calculate similarity, rather than distance.
-                df_aux.loc[r, c] = 1 - distance.cosine(self.df.iloc[r], self.df.iloc[c])
+                df_aux.loc[r, c] = distance.cosine(self.df.iloc[r], self.df.iloc[c])
 
         np.fill_diagonal(df_aux.to_numpy(), 0)  # preenche diagonal principal com 0
 
