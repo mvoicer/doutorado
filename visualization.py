@@ -49,9 +49,9 @@ class Visualization:
         plt.scatter(df_obj.iloc[:, 0], df_obj.iloc[:, 1], color='grey', marker='o', facecolors='none')
         plt.scatter(df_obj.iloc[recommended[-n_rec:], 0], df_obj.iloc[recommended[-n_rec:], 1],
                     color='blue', marker='o', label='Recommended')
-        plt.scatter(df_obj.iloc[ranking[:n_rec], 0], df_obj.iloc[ranking[:n_rec], 1],
+        plt.scatter(df_obj.iloc[ranking[:1], 0], df_obj.iloc[ranking[:1], 1],
                     color='red', marker='o', label='Best predicted')
-        plt.scatter(df_obj.iloc[rank_mcdm[:n_rec], 0], df_obj.iloc[rank_mcdm[:n_rec], 1],
+        plt.scatter(df_obj.iloc[rank_mcdm[:1], 0], df_obj.iloc[rank_mcdm[:1], 1],
                     color='black', marker='+', s=100, label='Best ahp')
         plt.ylim(ymin=0)
         plt.xlim(xmin=0)
