@@ -1,7 +1,7 @@
 from normalization import Normalization
 import pandas as pd
 import numpy as np
-
+import time
 
 class Gera_Pc_Mcdm:
     def __init__(self, df, cb):
@@ -51,39 +51,39 @@ class Gera_Pc_Mcdm:
             m2 = np.tile(self.df.iloc[:, col].to_numpy().reshape(-1, 1), (1, nrow))
             df_dif = pd.DataFrame(m2 - m1)
 
-            new_df_dif = df_dif.copy()
-
             # Replace the diff values by the Saaty's scale values
+            new_df_dif = df_dif.copy()
             for i in range(nrow):
                 for j in range(nrow):
-                    if i == j:
-                        new_df_dif.iloc[i, j] = 1
-                    elif df_dif.iloc[i, j] < 0:
+                    if df_dif.iloc[i, j] < 0:
                         continue
                     else:
                         for idx, valor in enumerate(intervals):
                             if df_dif.iloc[i, j] <= valor:
                                 new_df_dif.iloc[j, i] = idx + 1
-                                new_df_dif.iloc[i, j] = 1 / (idx + 1)
+                                # new_df_dif.iloc[i, j] = 1 / (idx + 1)     #utiliza fração na escala Saaty
+                                new_df_dif.iloc[i, j] = -(idx + 1)          # utiliza valor negativo na escala Saaty
                                 break
 
             # If cost criteria: inverse of the assigned number
             if self.cb[col] == 'cost':
-                new_df_dif = 1 / new_df_dif
+                # new_df_dif = 1 / new_df_dif   #utiliza fração na escala Saaty
+                new_df_dif = -new_df_dif        # utiliza valor negativo na escala Saaty
             else:
                 pass
+
+            np.fill_diagonal(new_df_dif.to_numpy(), 1)  # preenche diagonal principal com 1
 
             # Concat the pairwise matrices
             pc_matrix = pd.concat([pc_matrix, new_df_dif], axis=1)
 
-            # del new_df_dif
         return pc_matrix
 
 class Mcdm_ranking:
     def __init__(self):
         pass
 
-    def promethee_ii_ranking(self, pc_matrix, weights=None, nobj=None, nrow=None):
+    def promethee_ii_ranking(self, pc_matrix, weights, nobj, nrow):
         if weights is None:
             weights = [1 / nobj] * nobj
         else:
@@ -123,9 +123,18 @@ class Mcdm_ranking:
 
         return ranking
 
-    def ahp_ranking(self, pc_matrix, weights=None, nobj=None, nrow=None):
+    def ahp_ranking(self, pc_matrix, weights, nobj, nrow, cb):
         eigen = pd.DataFrame()
         temp = nrow
+
+        # Retorna os valores para a escala original
+        pc_matrix[pc_matrix < 0] = 1 / np.abs(pc_matrix)
+
+        if weights is None:
+            weights = [(1 / len(cb))] * len(cb)
+        else:
+            weights = weights
+
         # Percorre a matriz de comparacoes pareadas e calcula as prioridades de cada matriz (i.e. da PC de cada objetivo)
         # e no final (eigen) concatena elas para, entao, multiplicar pelos pesos e calcular o ranking.
         # Ver: https://ricardo-vargas.com/pt/articles/analytic-hierarchy-process/
@@ -142,24 +151,19 @@ class Mcdm_ranking:
             # The "relative priority" (RP) column in the following table shows the average of each criterion.
             relative_priority = _pc_matrix.sum(axis=1) / nrow
 
-            # to find relative weight of each row by dividing the sum of the values of each row of n.
-            consistency_vector = _pc_matrix.sum(axis=1) / relative_priority
-
-            # lambda_max is equal to the sum of the elements of the column vector AW.
-            # highest eigenvalue lambda_max of the parity matrix is obtained by means of the arithmetic
-            # mean of the elements of the consistency vector.
-            lambda_max = np.sum(consistency_vector) / nrow
-
-            # consistency index (CI) - calculado via slide da USP
-            ci_i = (lambda_max - nrow) / (nrow - 1)
+            # # to find relative weight of each row by dividing the sum of the values of each row of n.
+            # consistency_vector = _pc_matrix.sum(axis=1) / relative_priority
+            #
+            # # lambda_max is equal to the sum of the elements of the column vector AW.
+            # # highest eigenvalue lambda_max of the parity matrix is obtained by means of the arithmetic
+            # # mean of the elements of the consistency vector.
+            # lambda_max = np.sum(consistency_vector) / nrow
+            #
+            # # consistency index (CI) - calculado via slide da USP
+            # ci_i = (lambda_max - nrow) / (nrow - 1)
 
             # Concatena vetor de prioridades
             eigen = pd.concat([eigen, relative_priority], axis=1, ignore_index=True)
-
-        if weights is None:
-            weights = relative_priority
-        else:
-            weights = weights
 
         # Calculate ranking
         ranking = (eigen * weights).apply('sum', axis=1).sort_values(ascending=True).index.to_list()
