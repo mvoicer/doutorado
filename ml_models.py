@@ -95,7 +95,7 @@ def fine_tunning(CV, X, y, algorithm):
                                                            n_estimators=1000,
                                                            n_jobs=-1))
         hyperparameters = dict(estimator__n_estimators=[10, 50, 100, 1000],
-                               estimator__max_features=["auto", "log2", "sqrt"],
+                               estimator__max_features=["log2", "sqrt"],
                                estimator__bootstrap=[True, False],
                                estimator__max_depth=[5, 15, 30, 80],
                                estimator__min_samples_leaf=[3, 4, 5],
