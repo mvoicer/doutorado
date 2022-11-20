@@ -32,8 +32,8 @@ def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, percen
                     '__ml_' + ml_method).lower()
 
     # Load variables
-    n_executions, total_samples_per_rec, max_sample, CV = load_params()
-    df_var, df_obj = load_dataset(df=dataframe, n_samples=max_sample)
+    n_executions, total_samples_per_rec, CV = load_params()
+    df_var, df_obj = load_dataset(df=dataframe)
     npop, nvar = df_var.shape
     nobj = df_obj.shape[1]
     results = initialize_results()
@@ -50,14 +50,14 @@ def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, percen
 
     # Initialize an arbitrary ranking to check convergence
     indexes = list(df_var.index)
-    rank_aleatory = indexes.copy()
-    random.shuffle(rank_aleatory)
 
     # Initialize number of queries
     number_queries = 0
     accepted_error = 0.05
 
     for exc in (range(n_executions)):
+        rank_aleatory = indexes.copy()
+        rank_aleatory.reverse()
         print("*" * 100)
         print("\nExecution: ", exc)
         print("*" * 100)
