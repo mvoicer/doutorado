@@ -2,13 +2,24 @@ import pandas as pd
 from distance import Distance
 from mcdm import Gera_Pc_Mcdm, Mcdm_ranking
 from params import *
+import numpy as np
 
-# Load dataframe
+
+# Load dataframe e remove duplicados
 def load_dataset(df, n_samples):
     df_var = pd.read_csv('data/'+str(df)+'_DEC.CSV', header=None)  # decision variables
     df_var = df_var.iloc[0:n_samples, :].round(5)
     df_obj = pd.read_csv('data/'+str(df)+'_OBJ.CSV', header=None)  # values in Pareto front
     df_obj = df_obj.iloc[0:n_samples, :].round(5)
+    n_var = df_var.shape[1]
+    n_obj = df_obj.shape[1]
+    df_merged = pd.concat([df_var, df_obj], ignore_index=True, sort=False, axis=1)
+    df_merged.drop_duplicates(inplace=True)
+    df_merged = df_merged.reset_index(drop=True)
+    df_var = df_merged.iloc[:, :n_var]
+    df_obj = df_merged.iloc[:, n_var:]
+    df_obj.columns = np.arange(1, n_obj + 1)
+    df_obj.columns = ["Obj " + str(i) for i in df_obj.columns]
     return df_var, df_obj
 
 
