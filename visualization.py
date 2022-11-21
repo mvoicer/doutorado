@@ -98,8 +98,12 @@ class Visualization:
         else:
             # plot in parallel coordinates
             layout = go.Layout(autosize=False, width=600, height=400)
-            dim = df_obj.columns
+            dim1 = df_obj.columns
+            dim2 = df_obj.iloc[rank_mcdm[0:n_rec], :].columns
 
-            fig = px.parallel_coordinates(df_obj, dimensions=dim)
-            fig.update_layout(layout)
-            fig.show()
+            fig1 = px.parallel_coordinates(df_obj, dimensions=dim1)
+            fig2 = px.parallel_coordinates(df_obj.iloc[rank_mcdm[0:n_rec], :], dimensions=dim2)
+            fig1.update_layout(layout)
+            fig2.update_layout(layout)
+            fig1.show()
+            fig2.show()
