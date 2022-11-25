@@ -46,7 +46,7 @@ def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, percen
     pc_matrix, rank_mcdm = generate_preferences(mcdm_method, df_obj, weights=weights, cb=cost_benefit)
 
     if plot_pareto_front is True:
-        Visualization.plot_pareto_front(df_obj, rank_mcdm, n_rec)
+        Visualization.plot_pareto_front(df_obj)
 
     # Initialize an arbitrary ranking to check convergence
     indexes = list(df_var.index)
@@ -105,6 +105,7 @@ def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, percen
 
             if plot_recommended_solutions is True:
                 Visualization.plot_recommended_solutions(df_obj, Q, rank_aleatory, rank_mcdm, n_rec)
+                Visualization.plot_recommended_solutions(df_obj, Q, rank_aleatory, rank_mcdm, n_rec)
 
             # Fine tunning
             if temp_error > accepted_error:
@@ -116,9 +117,9 @@ def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, percen
                 tuned_model.fit(X_train, y_train)
                 print("Time to fit model: %s seconds" % (time.time() - start_fit_model))
 
-                joblib.dump(tuned_model, "experiments/varia_nrec/tunned_models/" + path_to_save + '.gz')
+                joblib.dump(tuned_model, "experiments/varia_ml/pf3/tunned_models/" + path_to_save + '.gz')
             else:
-                tuned_model = joblib.load("experiments/varia_nrec/tunned_models/" + path_to_save + ".gz")
+                tuned_model = joblib.load("experiments/varia_ml/pf3/tunned_models/" + path_to_save + ".gz")
 
             # Model evaluation
             y_pred = tuned_model.predict(X_test)
@@ -168,6 +169,6 @@ def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, percen
         print("Time to run: %s seconds ---" % (time.time() - start_time))
 
     # Save results
-    joblib.dump(results, 'experiments/varia_nrec/results/' + path_to_save + '.gz')
+    joblib.dump(results, 'experiments/varia_ml/pf3/results/' + path_to_save + '.gz')
 
     return results
