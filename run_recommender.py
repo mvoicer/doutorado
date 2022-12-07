@@ -105,7 +105,6 @@ def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, percen
 
             if plot_recommended_solutions is True:
                 Visualization.plot_recommended_solutions(df_obj, Q, rank_aleatory, rank_mcdm, n_rec)
-                Visualization.plot_recommended_solutions(df_obj, Q, rank_aleatory, rank_mcdm, n_rec)
 
             # Fine tunning
             if temp_error > accepted_error:
