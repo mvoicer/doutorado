@@ -8,7 +8,6 @@ import time
 from matrix_manipulation import create_subsample, merge_matrices
 from ml_models import fine_tunning
 from correlation import norm_kendall, spearman_rho
-from params import *
 from metrics import *
 from matplotlib import pyplot as plt
 from pre_processing import load_dataset, initialize_results, generate_preferences, \
@@ -22,7 +21,7 @@ np.seterr(divide='ignore', invalid='ignore')  # ignora erros de divisão por 0
 
 def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, percent_random,
                     initial_recomm, similarity_measure, ml_method, date, plot_pareto_front,
-                    plot_recommended_solutions):
+                    plot_recommended_solutions, n_executions, total_samples_per_rec, CV):
     # How to save the results -- define name
     path_to_save = (date + '__' +
                     mcdm_method +
@@ -31,8 +30,6 @@ def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, percen
                     '__sim_' + similarity_measure +
                     '__ml_' + ml_method).lower()
 
-    # Load variables
-    n_executions, total_samples_per_rec, CV = load_params()
     df_var, df_obj = load_dataset(df=dataframe)
     npop, nvar = df_var.shape
     nobj = df_obj.shape[1]
@@ -110,15 +107,14 @@ def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, percen
             if temp_error > accepted_error:
                 start_fine_tunning = time.time()
                 tuned_model = fine_tunning(CV, X_train, y_train, algorithm=ml_method)
-                print("Time to fine_tunning: %s seconds" % (time.time() - start_fine_tunning))
+                print("Time to fine tunning: %s seconds" % (time.time() - start_fine_tunning))
 
                 start_fit_model = time.time()
                 tuned_model.fit(X_train, y_train)
-                print("Time to fit model: %s seconds" % (time.time() - start_fit_model))
 
-                joblib.dump(tuned_model, "experiments/varia_ml/pf3/tunned_models/" + path_to_save + '.gz')
+                joblib.dump(tuned_model, "experiments/varia_theta/pf1/tunned_models/" + path_to_save + '.gz')
             else:
-                tuned_model = joblib.load("experiments/varia_ml/pf3/tunned_models/" + path_to_save + ".gz")
+                tuned_model = joblib.load("experiments/varia_theta/pf1/tunned_models/" + path_to_save + ".gz")
 
             # Model evaluation
             y_pred = tuned_model.predict(X_test)
@@ -129,7 +125,7 @@ def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, percen
             y_pred[y_pred < -9] = -9
 
             # Visualization.scatter_predicted(nobj, y_test, y_pred)
-            Visualization.hist_residuals(nobj, y_test, y_pred)
+            # Visualization.hist_residuals(nobj, y_test, y_pred)
 
             # Calculate metrics
             results['mse'].append(mse(y_pred=y_pred, y_true=y_test))
@@ -145,11 +141,11 @@ def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, percen
             df_merged = merge_matrices(N_Q, pc_matrix, y_pred)
 
             # Calculate the predicted ranking
-            rank_predicted = calculate_mcdm_ranking(mcdm_method, df_merged, weights=weights, npop=npop, nobj=nobj,
-                                                    cb=cost_benefit)
+            rank_predicted = calculate_mcdm_ranking(mcdm_method, df_merged, weights=weights,
+                                                    npop=npop, nobj=nobj, cb=cost_benefit)
             print('Rank predicted: \n', rank_predicted)
             print('Rank mcdm: \n', rank_mcdm)
-            print('Rank Aleatorio \n', rank_aleatory)
+            print('Rank aleatorio \n', rank_aleatory)
 
             # Computing tau between solutions
             temp_error = norm_kendall(rank_aleatory, rank_predicted)
@@ -163,11 +159,12 @@ def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, percen
             number_queries += (n_rec * (n_rec - 1) / 2) * nobj
             print('Number of queries: ', number_queries)
 
+
             # Update the ranking
             rank_aleatory = rank_predicted
-        print("Time to run: %s seconds ---" % (time.time() - start_time))
 
-    # Save results
-    joblib.dump(results, 'experiments/varia_ml/pf3/results/' + path_to_save + '.gz')
+        # Save results
+        joblib.dump(results, 'experiments/varia_theta/pf1/results/' + path_to_save + '.gz')
+        print("Time to run execution", exc,": %s seconds" % (time.time() - start_time))
 
     return results
