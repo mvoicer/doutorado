@@ -45,7 +45,7 @@ def calculate_similarities(df_obj, simm_approach):
 # Initialize a dict for the results
 def initialize_results():
     results = {}
-    for metr in list_metrics:
+    for metr in ['tau', 'rho', 'mse', 'rmse', 'r2', 'mape', 'mcdm']:
         results[metr] = []
     return results
 
