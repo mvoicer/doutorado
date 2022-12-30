@@ -1,7 +1,6 @@
 from normalization import Normalization
 import pandas as pd
 import numpy as np
-import time
 
 class Gera_Pc_Mcdm:
     def __init__(self, df, cb):

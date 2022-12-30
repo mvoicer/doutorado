@@ -1,9 +1,5 @@
 from run_recommender import run_recommender
 
-# NSGAIII_GPD03_M2 -> 2 objetivos, convexa e multimodal
-# NSGAIII_GPD04_M3 -> 3 objetivos
-# NSGAIII_GPD04_M2 -> 2 objetivos, concava
-
 results = run_recommender(dataframe='NSGAIII_GPD04_M3',
                           n_rec=5,                                      # int: qtd solutions to be evaluated per time
                           mcdm_method='AHP',                             # AHP, Promethee

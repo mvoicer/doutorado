@@ -1,7 +1,6 @@
 import pandas as pd
 from distance import Distance
 from mcdm import Gera_Pc_Mcdm, Mcdm_ranking
-from params import *
 import numpy as np
 
 
