@@ -58,7 +58,7 @@ def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, percen
         print("*" * 100)
         # Recommended solutions
         Q = []
-        temp_error = 1
+        temp_error = 1.0
         iteracao = 0
         start_time = time.time()
         for aux in range(n_rec, total_samples_per_rec, n_rec):
@@ -107,12 +107,11 @@ def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, percen
                 tuned_model = fine_tunning(CV, X_train, y_train, algorithm=ml_method)
                 print("Time to fine tunning: %s seconds" % (time.time() - start_fine_tunning))
 
-                start_fit_model = time.time()
                 tuned_model.fit(X_train, y_train)
 
-                joblib.dump(tuned_model, "experiments/varia_theta/pf1/tunned_models/" + path_to_save + '.gz')
+                joblib.dump(tuned_model, "experiments/varia_theta/pf1/tunned_models/" + path_to_save + '__exec_' + str(exc) +'.gz')
             else:
-                tuned_model = joblib.load("experiments/varia_theta/pf1/tunned_models/" + path_to_save + ".gz")
+                tuned_model = joblib.load("experiments/varia_theta/pf1/tunned_models/" + path_to_save + '__exec_' + str(exc) +'.gz')
 
             # Model evaluation
             y_pred = tuned_model.predict(X_test)
@@ -153,16 +152,15 @@ def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, percen
             print("Tau com ranking mcdm: {}, ranking aleatório: {}".format(norm_kendall(rank_mcdm, rank_predicted),
                                                                            temp_error))
 
-            # Calculate number of queries
+            # Calculate NQ
             number_queries += (n_rec * (n_rec - 1) / 2) * nobj
             print('Number of queries: ', number_queries)
-
 
             # Update the ranking
             rank_aleatory = rank_predicted
 
         # Save results
-        joblib.dump(results, 'experiments/varia_theta/pf1/results/' + path_to_save + '.gz')
+        joblib.dump(results, 'experiments/varia_theta/pf1/results/' + path_to_save + '__exec_' + str(exc) +'.gz')
         print("Time to run execution", exc,": %s seconds" % (time.time() - start_time))
 
     return results
