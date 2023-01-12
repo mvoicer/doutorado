@@ -24,14 +24,14 @@ def clusterization(df, cluster_technique, tam, visualization=False, **kwargs):
         model = AgglomerativeClustering(n_clusters=tam, **kwargs)
     else:
         raise ValueError("Cluster technique {} not implemented".format(cluster_technique))
-        
+
     labels = model.fit_predict(df)
     unique_labels = np.unique(labels)
 
     if visualization:
         import matplotlib.pyplot as plt
         for label in unique_labels:
-            plt.scatter(df[labels==label, 0], df[labels==label, 1])
+            plt.scatter(df[labels == label, 0], df[labels == label, 1])
         plt.show()
 
     chosen = []

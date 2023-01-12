@@ -30,20 +30,26 @@ def initial_recommendation(type_rec, indexes, df_obj, length):
     Summary:
         Define the solutions to be chosen in the 1st iteration
     Parameters:
-        type_rec:
+        type_rec: Type of recommendation. It can be rand or using clustering (kmeans or agglomerative)
             rand:       aleatory recommendations
-            cluster:    use kmeans technique and select 1 solution per cluster
+            kmeans:    use kmeans technique and select 1 solution per cluster
+            agglomerative:    use agglomerative clustering technique and select 1 solution per cluster
         indexes:    indexes of the variables in decision space
         df_obj:     solutions in solutions space
-        length:     n_rec- number of solutions to be recommended per iteration
+        length:     (equal n_rec) number of solutions to be recommended per iteration
         n_rec:                  number of solutions to be recommended per iteration
+    Returns:
+    Q (list): List of indexes of the recommended solutions.
+    N_Q (list): List of indexes of the non-recommended solutions.
     """
     global Q
     if type_rec == 'rand':
         temp = indexes.copy()
         random.shuffle(temp)
         Q = temp[0:length]
-    elif type_rec == 'cluster':
+    elif type_rec == 'kmeans':
         Q = clusterization(df=df_obj, cluster_technique='kmeans', tam=length)
+    elif type_rec == 'agglomerative':
+        Q = clusterization(df=df_obj, cluster_technique='agglomerative', tam=length)
     N_Q = [x for x in indexes if x not in Q]
     return Q, N_Q
