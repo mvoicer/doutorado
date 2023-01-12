@@ -1,5 +1,4 @@
 import pandas as pd
-from distance import Distance
 from mcdm import Gera_Pc_Mcdm, Mcdm_ranking
 import numpy as np
 
@@ -21,26 +20,6 @@ def load_dataset(df):
     df_obj.columns = ["Obj " + str(i) for i in df_obj.columns]
     return df_var, df_obj
 
-
-def calculate_similarities(df_obj, simm_approach):
-    """
-    Summary:
-        Calculate the distance based on the 'simm_approach' among solutions
-    Parameters:
-        df_obj: dataframe with the values in objective space
-        simm_approach:
-            cos: cosine measure
-            euc: euclidean distance
-    Returns:
-        dataframe with the distances
-    """
-    if simm_approach == 'cos':
-        df_dist = Distance(df_obj).cosine()
-    elif simm_approach == 'euc':
-        df_dist = Distance(df_obj).euclidean()
-    else:
-        raise ValueError('Distance indicated is not implemented')
-    return df_dist
 
 # Initialize a dict for the results
 def initialize_results():

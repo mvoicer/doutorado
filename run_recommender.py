@@ -6,11 +6,11 @@ import time
 
 from matrix_manipulation import create_subsample, merge_matrices
 from ml_models import fine_tunning
-from correlation import norm_kendall, spearman_rho
+from correlation import norm_kendall
 from metrics import *
-from matplotlib import pyplot as plt
+from distance import calculate_similarities
 from pre_processing import load_dataset, initialize_results, generate_preferences, \
-    calculate_similarities, calculate_mcdm_ranking
+    calculate_mcdm_ranking
 from recomm_manipulation import initial_recommendation, make_recommendation
 from visualization import Visualization
 

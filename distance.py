@@ -1,37 +1,27 @@
-from scipy.spatial import distance
-import pandas as pd
-import numpy as np
+from sklearn.metrics import pairwise_distances
 
-
-class Distance:
-    def __init__(self, df):
-        self.df = df
-
-    def euclidean(self):
-        """
-        Calculate the euclidean distance among all the solutions.
-        Input: Pareto front solutions
-        Output: Squared matrix with the distance among the solutions.
-        """
-        df_aux = pd.DataFrame(np.zeros((self.df.shape[0], self.df.shape[0])))
-        for r in range(self.df.shape[0]):
-            for c in range(self.df.shape[0]):
-                df_aux.loc[r, c] = distance.euclidean(self.df.iloc[r], self.df.iloc[c])
-        return df_aux
-
-    def cosine(self):
-        """
-        Compute the cosine similarity
-        :return: cosine similarity in [-1 1] interval.
-        """
+def calculate_similarities(df_obj, simm_approach):
+    """
+    Summary:
+        Calculate the distance among all the solutions based on 'simm_approach'.
+    Parameters:
+        df_obj: dataframe with the values in objective space
+        simm_approach: similarity measure to be used.
+            - 'cos': cosine similarity
+            - 'euc': euclidean distance
+            - 'man': manhattan distance
+    Returns:
+        dataframe with the distances
+    """
+    if simm_approach == 'cos':
+        #TODO: Ver distancia e similaridade.
         #https://stackoverflow.com/questions/58381092/difference-between-cosine-similarity-and-cosine-distance
         #https://stackoverflow.com/questions/18424228/cosine-similarity-between-2-number-lists
-        df_aux = pd.DataFrame(np.zeros((self.df.shape[0], self.df.shape[0])))
-        for r in range(self.df.shape[0]):
-            for c in range(self.df.shape[0]):
-                # Subtract 1 (see link above) to calculate similarity, rather than distance.
-                df_aux.loc[r, c] = distance.cosine(self.df.iloc[r], self.df.iloc[c])
-
-        np.fill_diagonal(df_aux.to_numpy(), 0)  # preenche diagonal principal com 0
-
-        return df_aux
+        df_dist = 1 - pairwise_distances(df_obj, metric='cosine')
+    elif simm_approach == 'euc':
+        df_dist = pairwise_distances(df_obj, metric='euclidean')
+    elif simm_approach == 'manhattan':
+        df_dist = pairwise_distances(df_obj, metric='manhattan')
+    else:
+        raise ValueError('Distance indicated is not implemented')
+    return df_dist
