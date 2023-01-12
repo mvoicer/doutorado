@@ -1,3 +1,13 @@
 # Default ignored files
 /shelf/
 /workspace.xml
+
+# Ignorando arquivos .log
+*.log
+
+# Ignorando pastas
+/build/
+
+# Ignorando arquivos .txt na pasta "docs"
+docs/*.txt
+
