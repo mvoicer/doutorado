@@ -22,7 +22,7 @@ def load_dataset(df):
 
 
 # Initialize a dict for the results
-metrics = ['tau', 'rho', 'mse', 'rmse', 'r2', 'mape', 'mcdm']
+metrics = ['mcdm', 'tau', 'pos', 'dbs', 'mse', 'rmse', 'r2', 'mape']
 def initialize_results_():
     return {metr: [] for metr in metrics}
 

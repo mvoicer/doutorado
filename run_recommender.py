@@ -147,8 +147,9 @@ def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, percen
             # Computing tau between solutions
             temp_error = norm_kendall(rank_aleatory, rank_predicted)
             results['tau'].append(temp_error)
-            results['rho'].append(spearman_rho(rank_aleatory, rank_predicted))
             results['mcdm'].append(norm_kendall(rank_mcdm, rank_predicted))
+            results['pos'].append(position_match_rate(rank_mcdm, rank_predicted))
+            results['dbs'].append(dbs(rank_mcdm, rank_predicted))
             print("Tau com ranking mcdm: {}, ranking aleatório: {}".format(norm_kendall(rank_mcdm, rank_predicted),
                                                                            temp_error))
 
