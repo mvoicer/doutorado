@@ -25,3 +25,12 @@ class Normalization:
                 # greater is better
                 dff[:, i] = (X - X.min()) / (X.max() - X.min())
         return pd.DataFrame(dff).round(4)
+
+    # def normalization_zero_one(self):
+    #     df = self.matrix.copy()
+    #     for i, col in enumerate(df.columns):
+    #         if self.cb[i] == 'cost':
+    #             df[col] = (df[col].max() - df[col]) / (df[col].max() - df[col].min())
+    #         else:
+    #             df[col] = (df[col] - df[col].min()) / (df[col].max() - df[col].min())
+    #     return df.round(4)
