@@ -6,6 +6,7 @@ def mape(y_pred, y_true):
     return mean_absolute_percentage_error(y_true, y_pred,
                                           multioutput='uniform_average')
 
+
 # https://scikit-learn.org/stable/modules/generated/sklearn.metrics.mean_squared_error.html
 def mse(y_pred, y_true):
     return mean_squared_error(y_true, y_pred,
