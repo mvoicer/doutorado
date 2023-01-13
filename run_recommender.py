@@ -32,7 +32,6 @@ def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, percen
     npop, nvar = df_var.shape
     nobj = df_obj.shape[1]
     results = initialize_results()
-    # results_treino = initialize_results()
 
     # Calculate the distances/similarities among the solutions
     df_dist = calculate_similarities(df_obj, similarity_measure)
