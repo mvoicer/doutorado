@@ -1,142 +1,98 @@
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
-from sklearn.linear_model import MultiTaskLassoCV, LassoCV, Ridge
 from sklearn import linear_model
+import optuna
+
 
 def fine_tunning(CV, X, y, algorithm):
+    # if algorithm == 'gbr':
+    #     model = MultiOutputRegressor(GradientBoostingRegressor())
+    #     hyperparameters = dict(estimator__learning_rate=[0.05],
+    #                            estimator__n_estimators=[50, 500, 1000],
+    #                            estimator__min_samples_split=[7, 10],
+    #                            estimator__max_depth=[15, 30],
+    #                            estimator__min_samples_leaf=[1, 2, 10])
+    #     grid_search = GridSearchCV(model,
+    #                                hyperparameters,
+    #                                cv=CV,
+    #                                n_jobs=-1,
+    #                                refit=True,
+    #                                verbose=True,
+    #                                return_train_score=True)
+    #     hyperparameters_tuning = grid_search.fit(X, y)
+    #     tuned_model = hyperparameters_tuning.best_estimator_
+    #     return tuned_model
+
     if algorithm == 'gbr':
-        model = MultiOutputRegressor(GradientBoostingRegressor(loss='squared_error',
-                                                               learning_rate=0.001,
-                                                               n_estimators=500,
-                                                               subsample=1.0,
-                                                               criterion='friedman_mse',
-                                                               min_samples_split=10,
-                                                               min_samples_leaf=1,
-                                                               min_weight_fraction_leaf=0.0,
-                                                               max_depth=30,
-                                                               min_impurity_decrease=0.0,
-                                                               init=None,
-                                                               max_features=None,
-                                                               alpha=0.9,
-                                                               verbose=0,
-                                                               max_leaf_nodes=None,
-                                                               warm_start=False,
-                                                               validation_fraction=0.1,
-                                                               n_iter_no_change=None,
-                                                               tol=0.0001,
-                                                               ccp_alpha=0.0))
-        hyperparameters = dict(estimator__learning_rate=[0.05],
-                               estimator__loss=['squared_error'],
-                               estimator__n_estimators=[50, 500, 1000],
-                               estimator__criterion=['friedman_mse'],
-                               estimator__min_samples_split=[7, 10],
-                               estimator__max_depth=[15, 30],
-                               estimator__min_samples_leaf=[1, 2, 10],
-                               estimator__min_impurity_decrease=[0],
-                               estimator__max_leaf_nodes=[5, 30])
-        randomized_search = RandomizedSearchCV(model,
-                                               hyperparameters,
-                                               random_state=42,
-                                               n_iter=60,
-                                               scoring=None,
-                                               n_jobs=-1,
-                                               refit=True,
-                                               cv=CV,
-                                               verbose=True,
-                                               pre_dispatch='2*n_jobs',
-                                               error_score='raise',
-                                               return_train_score=True)
-        hyperparameters_tuning = randomized_search.fit(X, y)
-        tuned_model = hyperparameters_tuning.best_estimator_
-        return tuned_model
+        # Cria o objeto de estudo
+        study = optuna.create_study()
 
+        # Define a função de objetivo
+        def objective(trial):
+            model = MultiOutputRegressor(GradientBoostingRegressor(
+                learning_rate=trial.suggest_loguniform('learning_rate', 1e-4, 1e-1),
+                n_estimators=trial.suggest_int('n_estimators', 50, 1000),
+                min_samples_split=trial.suggest_int('min_samples_split', 2, 15),
+                max_depth=trial.suggest_int('max_depth', 5, 30),
+                min_samples_leaf=trial.suggest_int('min_samples_leaf', 1, 10)
+            ))
 
-    elif algorithm == 'lasso':
-        model = MultiOutputRegressor(LassoCV(n_jobs=-1,
-                                                      cv=CV,
-                                                      verbose=True,
-                                                      eps=0.00001,
-                                                      n_alphas=100,
-                                                      max_iter=6000000))
-        hyperparameters = dict(estimator__eps=[.0001, .00001, .01, .0000001],
-                               estimator__n_alphas=[10, 50, 200],
-                               estimator__normalize=[False],
-                               estimator__max_iter=[50000, 5000000, 6000000],
-                               estimator__selection=['cyclic','random'])
-        randomized_search = RandomizedSearchCV(model,
-                                               hyperparameters,
-                                               random_state=42,
-                                               n_iter=60,
-                                               scoring=None,
-                                               n_jobs=-1,
-                                               refit=True,
-                                               cv=CV,
-                                               verbose=True,
-                                               pre_dispatch='2*n_jobs',
-                                               error_score='raise',
-                                               return_train_score=True)
-        hyperparameters_tuning = randomized_search.fit(X, y)
-        tuned_model = hyperparameters_tuning.best_estimator_
-        return tuned_model
+            # Executa a validação cruzada
+            scores = cross_val_score(model, X, y, cv=CV, n_jobs=-1)
 
-    elif algorithm == 'elast':
-        model = linear_model.MultiTaskElasticNet(alpha=.9,
-                                                 max_iter=6000000,
-                                                 tol=.00001,
-                                                 warm_start=True,
-                                                 random_state=42,
-                                                 selection='cyclic')
-        tuned_model = model.fit(X, y)
-        return tuned_model
+            # Retorna a média das métricas de desempenho
+            return np.mean(scores)
+
+        # Executa a busca de hiperparâmetros
+        study.optimize(objective, n_trials=100)
+
+        # Recupera o melhor modelo
+        best_model = study.best_trial.user_attrs['model']
+        return best_model
+
+    # elif algorithm == 'rf':
+    #     model = MultiOutputRegressor(RandomForestRegressor())
+    #     hyperparameters = dict(estimator__n_estimators=[10, 50, 100, 1000],
+    #                            estimator__max_features=["log2", "sqrt"],
+    #                            estimator__max_depth=[5, 15, 30, 80],
+    #                            estimator__min_samples_leaf=[3, 4, 5],
+    #                            estimator__min_samples_split=[2, 4, 10, 20])
+    #     grid_search = GridSearchCV(model,
+    #                                hyperparameters,
+    #                                cv=CV,
+    #                                n_jobs=-1,
+    #                                refit=True,
+    #                                verbose=True,
+    #                                return_train_score=True)
+    #     hyperparameters_tuning = grid_search.fit(X, y)
+    #     tuned_model = hyperparameters_tuning.best_estimator_
+    #     return tuned_model
 
     elif algorithm == 'rf':
-        model = MultiOutputRegressor(RandomForestRegressor(max_depth=2,
-                                                           n_estimators=1000,
-                                                           n_jobs=-1))
-        hyperparameters = dict(estimator__n_estimators=[10, 50, 100, 1000],
-                               estimator__max_features=["log2", "sqrt"],
-                               estimator__bootstrap=[True, False],
-                               estimator__max_depth=[5, 15, 30, 80],
-                               estimator__min_samples_leaf=[3, 4, 5],
-                               estimator__min_samples_split=[2, 4, 10, 20],
-                               estimator__warm_start=[True, False])
-        randomized_search = RandomizedSearchCV(model,
-                                               hyperparameters,
-                                               random_state=42,
-                                               n_iter=60,
-                                               scoring=None,
-                                               n_jobs=-1,
-                                               refit=True,
-                                               cv=CV,
-                                               verbose=True,
-                                               pre_dispatch='2*n_jobs',
-                                               error_score='raise',
-                                               return_train_score=True)
-        hyperparameters_tuning = randomized_search.fit(X, y)
-        tuned_model = hyperparameters_tuning.best_estimator_
-        return tuned_model
+        def objective(trial):
+            n_estimators = trial.suggest_int('estimator__n_estimators', 10, 1000)
+            max_features = trial.suggest_categorical('estimator__max_features', ["log2", "sqrt"])
+            max_depth = trial.suggest_int('estimator__max_depth', 5, 80)
+            min_samples_leaf = trial.suggest_int('estimator__min_samples_leaf', 3, 5)
+            min_samples_split = trial.suggest_int('estimator__min_samples_split', 2, 20)
+            criterion = trial.suggest_categorical('estimator__criterion',
+                                                  ['squared_error', 'absolute_error', 'poisson'])
 
-    elif algorithm == 'ridge':
-        model = MultiOutputRegressor(Ridge(random_state=42))
-        hyperparameters = dict(estimator__alpha=[.1, .5, 1, 2],
-                               estimator__fit_intercept=[True, False],
-                               estimator__normalize=[False],
-                               estimator__max_iter=[5, 100, 1000, 100000, 60000000],
-                               estimator__tol=[.001, .00001, .000001],
-                               estimator__solver=['auto','svd','cholesky','lsqr','sparse_cg','sag','saga'])
-        randomized_search = RandomizedSearchCV(model,
-                                               hyperparameters,
-                                               random_state=42,
-                                               n_iter=60,
-                                               scoring=None,
-                                               n_jobs=-1,
-                                               refit=True,
-                                               cv=CV,
-                                               verbose=True,
-                                               pre_dispatch='2*n_jobs',
-                                               error_score='raise',
-                                               return_train_score=True)
-        hyperparameters_tuning = randomized_search.fit(X, y)
-        tuned_model = hyperparameters_tuning.best_estimator_
-        return tuned_model
+            model = MultiOutputRegressor(RandomForestRegressor(n_estimators=n_estimators,
+                                                               max_features=max_features,
+                                                               max_depth=max_depth,
+                                                               min_samples_leaf=min_samples_leaf,
+                                                               min_samples_split=min_samples_split,
+                                                               criterion=criterion
+                                                               ))
+
+            scores = -cross_val_score(model, X, y, cv=CV, n_jobs=-1, scoring='neg_mean_absolute_error')
+            return scores.mean()
+
+        study = optuna.create_study()
+        study.optimize(objective, n_trials=100)
+        best_params = study.best_params
+        model = MultiOutputRegressor(RandomForestRegressor(**best_params))
+        model.fit(X, y)
+        return model
