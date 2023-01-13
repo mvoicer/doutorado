@@ -1,4 +1,16 @@
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_percentage_error
+import numpy as np
+
+
+# Position match metrics
+
+def norm_kendall(r1, r2):
+    """
+    Compute the normalized Kendall tau distance between two lists.
+
+    Parameters:
+    - r1: list, first list to compare.
+    - r2: list, second list to compare.
 
 
 # https://scikit-learn.org/stable/modules/generated/sklearn.metrics.mean_absolute_percentage_error.html
