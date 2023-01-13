@@ -22,11 +22,10 @@ def load_dataset(df):
 
 
 # Initialize a dict for the results
-def initialize_results():
-    results = {}
-    for metr in ['tau', 'rho', 'mse', 'rmse', 'r2', 'mape', 'mcdm']:
-        results[metr] = []
-    return results
+metrics = ['tau', 'rho', 'mse', 'rmse', 'r2', 'mape', 'mcdm']
+def initialize_results_():
+    return {metr: [] for metr in metrics}
+
 
 # Generate the preferences
 def generate_preferences(mcdm_method, df_obj, weights, cb):
