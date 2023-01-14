@@ -9,6 +9,4 @@ results = run_recommender(dataframe='NSGAIII_GPD04_M3',
                           initial_recomm='cluster',                     # rand, cluster
                           similarity_measure='euc',                     # cos, euc
                           ml_method='rf',                               #'gbr', 'lasso', 'elast', 'rf', 'ridge'
-                          date='10102022',
-                          plot_pareto_front=False,
-                          plot_recommended_solutions=False)
+                          date='10102022')

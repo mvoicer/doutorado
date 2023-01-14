@@ -18,8 +18,8 @@ np.seterr(divide='ignore', invalid='ignore')  # ignora erros de divisão por 0
 
 
 def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, percent_random,
-                    initial_recomm, similarity_measure, ml_method, date, plot_pareto_front,
-                    plot_recommended_solutions, n_executions, total_samples_per_rec, CV):
+                    initial_recomm, similarity_measure, ml_method, date,
+                    n_executions, total_samples_per_rec, CV):
     # How to save the results -- define name
     path_to_save = (date + '__' +
                     mcdm_method +
@@ -39,7 +39,7 @@ def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, percen
     # Generate the preferences
     pc_matrix, rank_mcdm = generate_preferences(mcdm_method, df_obj, weights=weights, cb=cost_benefit)
 
-    if plot_pareto_front is True:
+    if False:
         Visualization.plot_pareto_front(df_obj)
 
     # Initialize an arbitrary ranking to check convergence
@@ -97,7 +97,7 @@ def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, percen
                 X_train, y_train = create_subsample(df_var=df_var, df_pref=pc_matrix, nobj=nobj, index=Q)
                 X_test, y_test = create_subsample(df_var=df_var, df_pref=pc_matrix, nobj=nobj, index=N_Q)
 
-            if plot_recommended_solutions is True:
+            if False:
                 Visualization.plot_recommended_solutions(df_obj, Q, rank_aleatory, rank_mcdm, n_rec)
 
             # Fine tunning
