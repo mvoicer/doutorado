@@ -9,4 +9,7 @@ results = run_recommender(dataframe='NSGAIII_GPD04_M3',
                           initial_recomm='cluster',                     # rand, cluster
                           similarity_measure='euc',                     # cos, euc
                           ml_method='rf',                               #'gbr', 'lasso', 'elast', 'rf', 'ridge'
-                          date='10102022')
+                          date='10102022',
+                          n_executions = n_executions,
+                          total_samples_per_rec = total_samples_per_red,
+                          CV = CV)
