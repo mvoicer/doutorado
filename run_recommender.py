@@ -17,13 +17,17 @@ from visualization import Visualization
 np.seterr(divide='ignore', invalid='ignore')  # ignora erros de divisão por 0
 
 
-def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, percent_random,
+def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, theta,
                     initial_recomm, similarity_measure, ml_method, date,
-                    n_executions, total_samples_per_rec, CV):
+                    n_executions, total_samples_per_rec, CV,
+                    plot_pareto_front=False,
+                    plot_recommended_solutions=False,
+                    scatter_predicted=False,
+                    hist_residuals=False):
     # How to save the results -- define name
     path_to_save = (date + '__' +
                     mcdm_method +
-                    '__theta_' + str(percent_random) +
+                    '__theta_' + str(theta) +
                     '__init_' + initial_recomm +
                     '__sim_' + similarity_measure +
                     '__ml_' + ml_method).lower()
@@ -39,7 +43,7 @@ def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, percen
     # Generate the preferences
     pc_matrix, rank_mcdm = generate_preferences(mcdm_method, df_obj, weights=weights, cb=cost_benefit)
 
-    if False:
+    if plot_pareto_front:
         Visualization.plot_pareto_front(df_obj)
 
     # Initialize an arbitrary ranking to check convergence
@@ -58,13 +62,14 @@ def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, percen
         # Recommended solutions
         Q = []
         temp_error = 1.0
-        iteracao = 0
+        number_queries = 0
+        t = 0
         start_time = time.time()
         for aux in range(n_rec, total_samples_per_rec, n_rec):
-            iteracao += 1
+            t += 1
             print("*" * 50)
-            print("Iteracao: ", iteracao)
-            print("*" * 15)
+            print("Iteration ", t)
+            print("*" * 50)
 
             # 2nd iteration on
             if len(Q) != 0:
@@ -72,7 +77,7 @@ def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, percen
                 most_similar = df_dist.iloc[rank_predicted[0]].sort_values(ascending=True).index.to_list()
                 print("Most similar: ", most_similar)
                 # Generate the list of recommendations
-                entrance = make_recommendation(most_similar, Q, n_rec, math.floor(n_rec * percent_random))
+                entrance = make_recommendation(most_similar, Q, n_rec, math.floor(n_rec * theta))
 
                 # Get the preferences for the new alternatives (entrance) and for the last one in Q
                 # (for the condorcet/regularization) and merge to the train and test set
@@ -97,7 +102,7 @@ def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, percen
                 X_train, y_train = create_subsample(df_var=df_var, df_pref=pc_matrix, nobj=nobj, index=Q)
                 X_test, y_test = create_subsample(df_var=df_var, df_pref=pc_matrix, nobj=nobj, index=N_Q)
 
-            if False:
+            if plot_recommended_solutions:
                 Visualization.plot_recommended_solutions(df_obj, Q, rank_aleatory, rank_mcdm, n_rec)
 
             # Fine tunning
@@ -120,8 +125,10 @@ def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, percen
             y_pred[y_pred > 9] = 9
             y_pred[y_pred < -9] = -9
 
-            # Visualization.scatter_predicted(nobj, y_test, y_pred)
-            # Visualization.hist_residuals(nobj, y_test, y_pred)
+            if scatter_predicted:
+                Visualization.scatter_predicted(nobj, y_test, y_pred)
+            if hist_residuals:
+                Visualization.hist_residuals(nobj, y_test, y_pred)
 
             # Calculate metrics
             results['mse'].append(mse(y_pred=y_pred, y_true=y_test))
