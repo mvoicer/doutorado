@@ -82,10 +82,7 @@ class Mcdm_ranking:
         pass
 
     def promethee_ii_ranking(self, pc_matrix, weights, nobj, nrow):
-        if weights is None:
-            weights = [1 / nobj] * nobj
-        else:
-            weights = weights
+        weights = [1 / nobj] * nobj if weights is None else weights
 
         # Calculate the preference function Pj(a,b)
         pc_matrix[pc_matrix <= 0] = 0
@@ -128,10 +125,8 @@ class Mcdm_ranking:
         # Retorna os valores para a escala original
         pc_matrix[pc_matrix < 0] = 1 / np.abs(pc_matrix)
 
-        if weights is None:
-            weights = [(1 / len(cb))] * len(cb)
-        else:
-            weights = weights
+        weights = [1 / len(cb)] * len(cb) if weights is None else weights
+
 
         # Percorre a matriz de comparacoes pareadas e calcula as prioridades de cada matriz (i.e. da PC de cada objetivo)
         # e no final (eigen) concatena elas para, entao, multiplicar pelos pesos e calcular o ranking.
