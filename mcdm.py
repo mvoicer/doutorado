@@ -127,7 +127,6 @@ class Mcdm_ranking:
 
         weights = [1 / len(cb)] * len(cb) if weights is None else weights
 
-
         # Percorre a matriz de comparacoes pareadas e calcula as prioridades de cada matriz (i.e. da PC de cada objetivo)
         # e no final (eigen) concatena elas para, entao, multiplicar pelos pesos e calcular o ranking.
         # Ver: https://ricardo-vargas.com/pt/articles/analytic-hierarchy-process/
