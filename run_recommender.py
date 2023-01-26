@@ -24,6 +24,7 @@ def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, theta,
                     plot_recommended_solutions=False,
                     scatter_predicted=False,
                     hist_residuals=False):
+
     # How to save the results -- define name
     path_to_save = (date + '__' +
                     mcdm_method +
@@ -50,7 +51,6 @@ def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, theta,
     indexes = list(df_var.index)
 
     # Initialize number of queries
-    number_queries = 0
     accepted_error = 0.05
 
     for exc in (range(n_executions)):
@@ -107,6 +107,7 @@ def run_recommender(dataframe, n_rec, mcdm_method, weights, cost_benefit, theta,
 
             # Fine tunning
             if temp_error > accepted_error:
+            # if len(Q) == n_rec:
                 start_fine_tunning = time.time()
                 tuned_model = fine_tunning(CV, X_train, y_train, algorithm=ml_method)
                 print("Time to fine tunning: %s seconds" % (time.time() - start_fine_tunning))
