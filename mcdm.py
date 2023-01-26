@@ -67,8 +67,6 @@ class Gera_Pc_Mcdm:
             if self.cb[col] == 'cost':
                 # new_df_dif = 1 / new_df_dif   #utiliza fração na escala Saaty
                 new_df_dif = -new_df_dif        # utiliza valor negativo na escala Saaty
-            else:
-                pass
 
             np.fill_diagonal(new_df_dif.to_numpy(), 1)  # preenche diagonal principal com 1
 
@@ -122,7 +120,7 @@ class Mcdm_ranking:
         eigen = pd.DataFrame()
         temp = nrow
 
-        # Retorna os valores para a escala original
+        # Retorna os valores preditos para a escala original
         pc_matrix[pc_matrix < 0] = 1 / np.abs(pc_matrix)
 
         weights = [1 / len(cb)] * len(cb) if weights is None else weights
