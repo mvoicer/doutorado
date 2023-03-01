@@ -133,7 +133,7 @@ class Mcdm_ranking:
             _pc_matrix = pc_matrix.iloc[:, i:temp]
             temp += nrow
 
-            # normalized matrix and Eigen vector
+            # normalized matrix
             _pc_matrix = _pc_matrix / _pc_matrix.sum()
 
             # weights vector (w_ij)
