@@ -3,9 +3,9 @@ from random import randrange
 from sklearn.cluster import KMeans, AgglomerativeClustering
 
 
-def clusterization(df, cluster_technique, tam, visualization=False, **kwargs):
+def clusterization(df, cluster_technique, tam):
     """
-    A function for clustering data using KMeans or Agglomerative Clustering.
+    A function for clustering data using KMeans or Agglomerative technique.
 
     Parameters:
     - df: DataFrame, Data to be clustered.
@@ -19,20 +19,14 @@ def clusterization(df, cluster_technique, tam, visualization=False, **kwargs):
     """
 
     if cluster_technique == 'kmeans':
-        model = KMeans(n_clusters=tam, **kwargs)
+        model = KMeans(n_clusters=tam)
     elif cluster_technique == 'agglomerative':
-        model = AgglomerativeClustering(n_clusters=tam, **kwargs)
+        model = AgglomerativeClustering(n_clusters=tam)
     else:
         raise ValueError("Cluster technique {} not implemented".format(cluster_technique))
 
     labels = model.fit_predict(df)
     unique_labels = np.unique(labels)
-
-    if visualization:
-        import matplotlib.pyplot as plt
-        for label in unique_labels:
-            plt.scatter(df[labels == label, 0], df[labels == label, 1])
-        plt.show()
 
     chosen = []
     for unq in unique_labels:
