@@ -1,26 +1,33 @@
 from sklearn.metrics import pairwise_distances
+import pandas as pd
 
 
-def calculate_similarities(df_obj, simm_approach):
+def calculate_similarities(df_obj, zeta):
     """
     Summary:
-        Calculate the distance among all the solutions based on 'simm_approach'.
+        Calculate the distance among all the solutions.
     Parameters:
         df_obj: dataframe with the values in objective space
-        simm_approach: similarity measure to be used.
-            - 'cos': cosine similarity
-            - 'euc': euclidean distance
-            - 'man': manhattan distance
+        zeta: similarity distance between vectors u and v.
+            - 'cosine': cosine similarity
+            - 'euclidean': euclidean distance
+            - 'manhattan': manhattan distance
+            - 'chebyshev': Chebyshev distance
     Returns:
         dataframe with the distances
     """
-    if simm_approach == 'cos':
-        #TODO: Ver distancia e similaridade.
-        df_dist = 1 - pairwise_distances(df_obj, metric='cosine')
-    elif simm_approach == 'euc':
-        df_dist = pairwise_distances(df_obj, metric='euclidean')
-    elif simm_approach == 'manhattan':
-        df_dist = pairwise_distances(df_obj, metric='manhattan')
+    if zeta not in ['euclidean', 'cosine', 'chebyshev', 'manhattan', 'minkowski_2', 'minkowski_05']:
+        raise ValueError(f'Invalid simmilarity distance: {zeta}')
+    elif zeta == 'euclidean':
+        df_dist = pairwise_distances(df_obj.values, metric='euclidean')
+    elif zeta == 'cosine':
+        df_dist = pairwise_distances(df_obj.values, metric='cosine')
+    elif zeta == 'chebyshev':
+        df_dist = pairwise_distances(df_obj.values, metric='chebyshev')
+    elif zeta == 'manhattan':
+        df_dist = pairwise_distances(df_obj.values, metric='manhattan')
+    elif zeta == 'minkowski_2':
+        df_dist = pairwise_distances(df_obj.values, metric='minkowski', p=2)
     else:
-        raise ValueError('Distance indicated is not implemented')
-    return df_dist
+        df_dist = pairwise_distances(df_obj.values, metric='minkowski', p=.5)
+    return pd.DataFrame(df_dist)
