@@ -2,6 +2,7 @@ from normalization import Normalization
 import pandas as pd
 import numpy as np
 
+
 class Gera_Pc_Mcdm:
     def __init__(self, df, cb):
         self.df = df
@@ -116,14 +117,14 @@ class Mcdm_ranking:
 
         return ranking
 
-    def ahp_ranking(self, pc_matrix, weights, nobj, nrow, cb):
+    def ahp_ranking(self, pc_matrix, weights, nrow):
         eigen = pd.DataFrame()
         temp = nrow
 
         # Retorna os valores preditos para a escala original
         pc_matrix[pc_matrix < 0] = 1 / np.abs(pc_matrix)
 
-        weights = [1 / len(cb)] * len(cb) if weights is None else weights
+        # weights = [1 / len(cb)] * len(cb) if weights is None else weights
 
         # Percorre a matriz de comparacoes pareadas e calcula as prioridades de cada matriz (i.e. da PC de cada objetivo)
         # e no final (eigen) concatena elas para, entao, multiplicar pelos pesos e calcular o ranking.
