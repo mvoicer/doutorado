@@ -1,7 +1,7 @@
 import pandas as pd
 from mcdm import Gera_Pc_Mcdm, Mcdm_ranking
 import numpy as np
-
+from params import metrics
 
 # Load dataframe e remove duplicados
 def load_dataset(df):
@@ -22,7 +22,7 @@ def load_dataset(df):
 
 
 # Initialize a dict for the results
-metrics = ['mcdm', 'tau', 'pos', 'dbs', 'mse', 'rmse', 'r2', 'mape']
+
 def initialize_results():
     return {metr: [] for metr in metrics}
 
@@ -41,7 +41,7 @@ def generate_preferences(mcdm_method, df_obj, weights, cb):
 
     if mcdm_method == 'AHP':
         pc_matrix = Gera_Pc_Mcdm(df=df_obj, cb=cb).ahp_pc()
-        rank_mcdm = Mcdm_ranking().ahp_ranking(pc_matrix=pc_matrix, weights=weights, nrow=npop, nobj=nobj, cb=cb)
+        rank_mcdm = Mcdm_ranking().ahp_ranking(pc_matrix=pc_matrix, weights=weights, nrow=npop)
     elif mcdm_method == 'Promethee':
         pc_matrix = Gera_Pc_Mcdm(df=df_obj, cb=cb).promethee_ii_pc()
         rank_mcdm = Mcdm_ranking().promethee_ii_ranking(pc_matrix=pc_matrix, weights=weights, nobj=nobj, nrow=npop)
@@ -52,7 +52,7 @@ def generate_preferences(mcdm_method, df_obj, weights, cb):
 
 def calculate_mcdm_ranking(mcdm_method, df_merged, weights, npop, nobj, cb):
     if mcdm_method == 'AHP':
-        rank_predicted = Mcdm_ranking().ahp_ranking(pc_matrix=df_merged, weights=weights, nrow=npop, nobj=nobj, cb=cb)
+        rank_predicted = Mcdm_ranking().ahp_ranking(pc_matrix=df_merged, weights=weights, nrow=npop)
     elif mcdm_method == 'Promethee':
         rank_predicted = Mcdm_ranking().promethee_ii_ranking(pc_matrix=df_merged, weights=weights, nobj=nobj, nrow=npop)
     else:
