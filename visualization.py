@@ -58,8 +58,8 @@ class Visualization:
             plt.xlim(xmin=0)
             plt.title('Recommended solutions')
             plt.legend(loc='best')
-            plt.ylim([-0.05, 2.2])
-            plt.xlim([-0.05, 2.2])
+            # plt.ylim([-0.05, 2.2])
+            # plt.xlim([-0.05, 2.2])
             plt.show()
         elif df_obj.shape[1] == 3:
             figure(figsize=(6, 6), dpi=100)
